@@ -1,0 +1,18 @@
+activity_code,activity_title_ar,info_icon_observed,observed_min_detail_items,verified_content_available,planned_kind,note
+fajr_awake,أذكار الاستيقاظ,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+fajr_after_dhikr,أذكار بعد الصلاة,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+fajr_morning_dhikr,أذكار الصباح,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhuhr_after_dhikr,أذكار بعد الصلاة,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+asr_after_dhikr,أذكار بعد الصلاة,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+asr_evening_dhikr,أذكار المساء,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+maghrib_after_dhikr,أذكار بعد الصلاة,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+isha_after_dhikr,أذكار بعد الصلاة,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_restroom,الخلاء,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_clothes,لبس الثوب وخلعه,YES,3,NO,ADHKAR_SET_IF_VERIFIED,Screenshot: at least three items visible
+dhikr_wudu,الوضوء,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_home,دخول المنزل والخروج,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_mosque,المسجد دخول وخروج,YES,2,NO,ADHKAR_SET_IF_VERIFIED,"Screenshot: two items visible, one completed"
+dhikr_walk_to_mosque,المشي إلى المسجد,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_food_drink,الأكل والشرب,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_riding,الركوب,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence
+dhikr_before_sleep,قبل النوم,YES,,NO,ADHKAR_SET_IF_VERIFIED,Detail content not verified from supplied evidence

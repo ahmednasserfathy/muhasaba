@@ -1,0 +1,35 @@
+catalog_version,category_code,category_title_ar,category_order,activity_code,activity_title_ar,activity_order,points_observed,show_info_icon_observed,schedule_policy_proposed,source_class
+2026-11-19-reference,FAJR,الفجر,1,fajr_awake,أذكار الاستيقاظ,1,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,FAJR,الفجر,1,fajr_pre_sunnah,السنة القبلية,2,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,FAJR,الفجر,1,fajr_first_jamaa,الجماعة الأولى,3,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,FAJR,الفجر,1,fajr_after_dhikr,أذكار بعد الصلاة,4,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,FAJR,الفجر,1,fajr_morning_dhikr,أذكار الصباح,5,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,FAJR,الفجر,1,fajr_duha,الضحى ٤ ركعات,6,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHUHR,الظهر,2,dhuhr_pre_sunnah,السنة القبلية ٤ ركعات,1,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHUHR,الظهر,2,dhuhr_first_jamaa,الجماعة الأولى,2,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHUHR,الظهر,2,dhuhr_after_dhikr,أذكار بعد الصلاة,3,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHUHR,الظهر,2,dhuhr_post_sunnah,السنة البعدية,4,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,ASR,العصر,3,asr_first_jamaa,الجماعة الأولى,1,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,ASR,العصر,3,asr_after_dhikr,أذكار بعد الصلاة,2,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,ASR,العصر,3,asr_evening_dhikr,أذكار المساء,3,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,MAGHRIB,المغرب,4,maghrib_first_jamaa,الجماعة الأولى,1,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,MAGHRIB,المغرب,4,maghrib_after_dhikr,أذكار بعد الصلاة,2,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,MAGHRIB,المغرب,4,maghrib_post_sunnah,السنة البعدية,3,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,ISHA,العشاء,5,isha_first_jamaa,الجماعة الأولى,1,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,ISHA,العشاء,5,isha_after_dhikr,أذكار بعد الصلاة,2,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,ISHA,العشاء,5,isha_post_sunnah,السنة البعدية,3,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,NIGHT,قيام الليل والوتر,6,night_two_rakats,ركعتان قيام ليل,1,4,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,NIGHT,قيام الليل والوتر,6,night_wird,الورد (ربعين),2,4,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,NIGHT,قيام الليل والوتر,6,night_witr,الوتر,3,1,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,QURAN_FAST,القرآن والصيام,7,quran_half_page,حفظ نصف صفحة,1,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,QURAN_FAST,القرآن والصيام,7,quran_six_quarters,قراءة ستة أرباع,2,2,0,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,QURAN_FAST,القرآن والصيام,7,fast_mon_thu,الصيام (الاثنين والخميس),3,5,0,MON_THU,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_restroom,الخلاء,1,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_clothes,لبس الثوب وخلعه,2,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_wudu,الوضوء,3,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_home,دخول المنزل والخروج,4,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_mosque,المسجد دخول وخروج,5,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_walk_to_mosque,المشي إلى المسجد,6,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_food_drink,الأكل والشرب,7,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_riding,الركوب,8,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
+2026-11-19-reference,DHIKR,أذكار متنوعة,8,dhikr_before_sleep,قبل النوم,9,2,1,DAILY,OBSERVED_LABEL_POINTS_INFERRED_SEMANTICS
