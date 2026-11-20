@@ -1,0 +1,57 @@
+# Credentials and local environment
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.*
+!**/.env.example
+*.pem
+*.p12
+*.pfx
+*.keystore
+*.jks
+id_rsa*
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+dist/
+build/
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+.flutter/
+**/build/
+*.g.dart
+*.freezed.dart
+
+# Local DB and dev artifacts
+*.sqlite
+*.sqlite3
+*.db
+*.log
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.gradle/
+**/.gradle/
+
+# Android signing
+android/key.properties
+**/android/key.properties
+**/android/app/*.jks
+**/android/app/*.keystore
