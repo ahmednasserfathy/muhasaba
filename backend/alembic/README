@@ -1,3 +1,4 @@
-PR-00 intentionally has no revisions or business tables.
-DATABASE_URL is required by env.py. See the root README for commands.
-Add reviewed revisions in later PRs; never reset a database on app startup.
+0001 creates catalog schema and PostgreSQL publication/immutability guards.
+0002 seeds the unverified reference catalog as DRAFT, without religious text.
+DATABASE_URL is required. See the root README and codex/PR-01_CATALOG_SCORING.md.
+Never reset or migrate a database automatically on app startup.
