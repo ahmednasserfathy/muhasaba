@@ -1,69 +1,207 @@
 # Muhasaba | محاسبة النفس
 
-Flutter Android-first application with a Python FastAPI backend and PostgreSQL. This repository is a **documentation-first bootstrap**, prepared for implementation by Codex in small reviewed pull requests. **There is no working mobile app or backend in this initial commit.**
+Android-first Arabic RTL Flutter application with a Python FastAPI backend and
+PostgreSQL. **PR-00 implements the foundation only:** a placeholder mobile screen,
+API liveness endpoint, local database infrastructure, migration scaffolding and CI.
+Accounts, catalog, scoring and journal features follow in separate reviewed PRs.
 
-## Current status
+## Product baseline
 
-- **Product baseline:** Implementation Blueprint v1.4, approved 20 November 2026.
-- **Next task:** PR-00 repository foundation only, see [`codex/PR-00_FOUNDATION.md`](codex/PR-00_FOUNDATION.md).
-- **Tech:** Flutter, Riverpod, Dio, Drift/SQLite; FastAPI, Python, Pydantic, SQLAlchemy 2, Alembic, PostgreSQL; Docker Compose for local development.
-- **Language/time:** Arabic RTL, default timezone `Africa/Cairo`; UTC timestamps for audit.
-- **Approach:** Modular monolith. No premature microservices, queues, Redis, Kubernetes or remote website scraping.
-
-## Read before implementation
-
-1. [`AGENTS.md`](AGENTS.md), repository-level Codex engineering instructions.
-2. [`docs/blueprint/10_LOCKED_CORE_MVP_AR.md`](docs/blueprint/10_LOCKED_CORE_MVP_AR.md), **authoritative business rules**.
-3. [`docs/blueprint/README.md`](docs/blueprint/README.md), guide to all v1.4 specifications.
-4. [`docs/blueprint/07_DELIVERY_CODEX.md`](docs/blueprint/07_DELIVERY_CODEX.md), PR roadmap and acceptance criteria.
-5. [`codex/PR-00_FOUNDATION.md`](codex/PR-00_FOUNDATION.md), first task, do not proceed to PR-01 without review.
+- Implementation Blueprint v1.4, approved 20 November 2026.
+- Read [`AGENTS.md`](AGENTS.md), then the authoritative
+  [`Locked Core v1.4`](docs/blueprint/10_LOCKED_CORE_MVP_AR.md).
+- [`Blueprint index`](docs/blueprint/README.md),
+  [`delivery roadmap`](docs/blueprint/07_DELIVERY_CODEX.md),
+  [`PR-00 scope`](codex/PR-00_FOUNDATION.md),
+  [`review workflow`](codex/WORKFLOW.md).
+- Arabic RTL; selected IANA timezone defaults to `Africa/Cairo` in later domain
+  work, with UTC audit timestamps.
+- Modular monolith: no queues, Redis, Kubernetes or external identity connection.
 
 ## Non-negotiable score rule
 
-Only the weighted **main daily accountability cards** determine daily score. Official, score-eligible nested adhkar share points **inside their fixed parent card**, granting partial credit as their repetitions are completed. Custom user dua/adhkar and hiding/reordering official defaults **never** add points or change the parent's point budget. Support exact undo and preserve scores from previous days.
+Only the weighted **main daily accountability cards** determine daily score.
+Official, score-eligible nested adhkar share points **inside their fixed parent
+card**, granting partial credit as their repetitions are completed. Custom user
+dua/adhkar and hiding/reordering official defaults **never** add points or change
+the parent's point budget. Support exact undo and preserve scores from previous
+days. This behavior is specified, not implemented in PR-00.
 
-## Initial project structure
+## Structure
 
 ```text
-muhasaba/
-  AGENTS.md
-  README.md
-  docs/blueprint/             # locked product, DB, API and domain specs
-  codex/PR-00_FOUNDATION.md  # first Codex task
-  codex/WORKFLOW.md          # PR review workflow
-  .github/pull_request_template.md
-  .gitignore
+backend/           FastAPI, SQLAlchemy metadata, Alembic and pytest
+mobile/            Flutter Android skeleton and Arabic RTL widget test
+infra/             Local PostgreSQL/API Compose stack and dummy env example
+.github/workflows/ Backend, Compose and Flutter checks
+codex/             PR scope and review workflow
+docs/blueprint/    Authoritative product specifications (unchanged)
 ```
 
-Codex will create `backend/`, `mobile/`, and `infra/` **during PR-00**. These directories are intentionally not scaffolded yet.
+## Prerequisites
 
-## GitHub setup
+- Python 3.13 managed by [uv](https://docs.astral.sh/uv/); commands and Docker use
+  uv 0.10.8. `uv.lock` pins the resolved backend dependencies.
+- Flutter **3.38.9**, Dart **3.10.8** (the same version used in CI), and Android
+  SDK/device/emulator for running the app. `pubspec.lock` is committed.
+- Docker with Compose v2 for the full API/database stack. No AWS account or
+  production credentials are needed for foundation development.
 
-**Preferred, assisted upload:** Create a **Private** GitHub repository named `muhasaba` owned by `ahmednasserfathy`, **initialize it with a README** so the `main` branch exists, and share the URL in this chat. The assistant can then upload these source files through the connected GitHub integration (updating the starter README). Check that the GitHub app has access to the newly created repository. Never send credentials.
+## Local API without Docker
 
-**Alternative, local upload:** Create an **empty Private** repository, without README, license or `.gitignore`; extract this package, open the `muhasaba` directory and execute:
+From the repository root:
 
 ```bash
-git init -b main
-git add .
-git commit -m "docs: initialize Muhasaba v1.4 implementation blueprint"
-git remote add origin https://github.com/ahmednasserfathy/muhasaba.git
-git push -u origin main
+cd backend
+uv python install 3.13
+uv sync --locked
+uv run --locked uvicorn app.main:app --reload
 ```
 
-If `git init -b main` is unavailable, run `git init` and then `git branch -M main`. Authenticate through GitHub's recommended credential flow; **do not place tokens in files or chat**. Do not mix the two setup paths to avoid an unnecessary merge conflict.
+In another terminal:
 
-Then connect/select this repository in the [Codex Cloud environment](https://help.openai.com/en/articles/20001545-using-codex-cloud), paste the first task from `codex/PR-00_FOUNDATION.md`, inspect its changes and tests, and create/review a PR before merging.
+```bash
+curl --fail http://127.0.0.1:8000/health
+```
+
+Expected: HTTP 200 and `{"status":"ok"}`. OpenAPI is at
+<http://127.0.0.1:8000/docs>. `/health` checks process liveness only, not database
+readiness. It runs without `DATABASE_URL`. Stop the development server with Ctrl+C.
+
+## Local API and PostgreSQL with Compose
+
+Run from the repository root. Pass the root `.env` explicitly so loading does
+not depend on Compose's project-directory defaults:
+
+```bash
+cp infra/.env.example .env
+docker compose --env-file .env -f infra/compose.yml up --build -d --wait
+curl --fail http://127.0.0.1:8000/health
+docker compose --env-file .env -f infra/compose.yml exec -T api alembic upgrade head
+```
+
+Copy the example only on first setup; do not overwrite an existing `.env`.
+The example passwords are dummy local values. The API uses a non-superuser
+`muhasaba` database role with schema creation privileges for migrations; bootstrap
+uses a separate PostgreSQL administrator. Both published ports bind to localhost.
+The API container runs as a non-root OS user.
+
+```bash
+docker compose --env-file .env -f infra/compose.yml logs api db
+docker compose --env-file .env -f infra/compose.yml down
+```
+
+`down` preserves the named database volume. No automatic migration or database
+reset runs during API startup. PostgreSQL initialization runs only on a fresh
+volume; editing passwords in `.env` does not change existing database passwords.
+These Compose settings are for local development, not a production deployment.
+Use URL-safe local `APP_DB_PASSWORD` values: Compose interpolates that value into
+`DATABASE_URL` without URL encoding.
+
+## Migrations
+
+`backend/alembic/versions/` is intentionally empty in PR-00. `upgrade head` checks
+the database connection and initializes Alembic bookkeeping; there are no business
+tables or revisions. `current`/`heads` therefore show no revision yet.
+
+For migration commands on the host with the Compose database running:
+
+```bash
+cd backend
+# Dummy example only; match the app password in your root .env.
+export DATABASE_URL='postgresql+psycopg://muhasaba:local_app_only@127.0.0.1:5432/muhasaba'
+uv run --locked alembic upgrade head
+uv run --locked alembic current
+uv run --locked alembic heads
+```
+
+Later PRs add model imports to Alembic metadata and create revisions with
+`uv run --locked alembic revision --autogenerate -m "describe schema change"`.
+Review generated upgrade/downgrade operations before applying them. There is no
+PR-00 schema change to roll back. Do not use `create_all()` or destructive resets
+as a migration strategy.
+
+## Mobile
+
+```bash
+cd mobile
+flutter pub get --enforce-lockfile
+flutter analyze
+flutter test
+flutter run
+```
+
+The app currently displays «محاسبة» and a welcome message in Arabic RTL. It does
+not call the API yet. Riverpod, Dio and Drift will be introduced with their first
+features rather than as unused dependencies. The Android project was generated
+with `flutter create --platforms=android --org com.muhasaba --project-name muhasaba mobile`.
+The generated application ID and debug signing are development placeholders.
+
+## Checks
+
+From `backend/`:
+
+```bash
+uv run --locked ruff check .
+uv run --locked ruff format --check .
+uv run --locked pytest
+```
+
+From `mobile/`:
+
+```bash
+dart format --output=none --set-exit-if-changed lib test
+flutter analyze
+flutter test
+```
+
+CI runs these checks plus a fresh Compose stack, live `/health` request and
+`alembic upgrade head`/`current` through the application database role.
+
+### Local verification (22 November 2026)
+
+| Check | Result | Evidence / limitation |
+|---|---|---|
+| `uv sync --locked` | PASS | Python 3.13.12, dependency lock resolved |
+| `uv run --locked ruff check .` | PASS | No lint findings |
+| `uv run --locked ruff format --check .` | PASS | Six Python files formatted |
+| `uv run --locked pytest` | PASS | API health smoke test |
+| Live Uvicorn `GET /health` | PASS | HTTP 200 and expected JSON on local port 18000 |
+| `alembic upgrade head --sql`, `alembic heads` | PASS | Offline scaffold loads; no revisions |
+| `flutter pub get --enforce-lockfile` | PASS | Locked dependency resolution |
+| Dart format check, `flutter analyze` | PASS | No formatting/analyzer issues |
+| `flutter test` | PASS | Arabic locale, app text and RTL smoke test |
+| Compose build/start, online migrations | NOT_RUN locally | Docker unavailable; included in CI |
+| Android device run / APK build | NOT_RUN | Android licenses incomplete; not required for widget tests |
+
+Check the PR's GitHub Actions results separately; local results do not imply CI
+or an Android device build passed.
+
+## Troubleshooting
+
+- Run `flutter doctor` to inspect Android tooling. Review/accept required Android
+  licenses with `flutter doctor --android-licenses` before device builds.
+- On macOS, `/usr/bin/python3` can be blocked by Xcode's license. Use the uv-managed
+  interpreter above. iOS/macOS builds and their Xcode/CocoaPods setup are outside
+  this Android foundation task.
+- If Docker is unavailable, use the standalone API and Flutter checks; the real
+  PostgreSQL/Compose checks still need Docker or CI before merge.
+- If port 8000 is busy, stop the host Uvicorn process before starting Compose.
+  If 5432 is busy, stop the conflicting local database or explicitly adjust the
+  Compose host mapping and host `DATABASE_URL` together.
+- Alembic requires an explicit `DATABASE_URL`; it does not automatically load
+  `.env`. Compose supplies its internal URL using hostname `db`; host commands use
+  `127.0.0.1`. Missing configuration fails instead of choosing a production database.
 
 ## Content rights and source verification
 
-The screenshots and public site are functional references, **not authorization to reuse private site APIs, copyrighted assets, or unverified Arabic texts**. Proposed scoring weights and Thursday seed totals are product fixtures rather than proof of the reference site's internal calculations.
+Screenshots and the public reference site are functional references, not
+permission to reuse private APIs, copyrighted assets or unverified Arabic texts.
+Proposed weights are product fixtures, not proof of the original site's internal
+calculations. Verified religious content is a later catalog/release gate.
 
-## References
+## Tooling references
 
-- [Flutter architecture](https://docs.flutter.dev/app-architecture)
-- [FastAPI docs](https://fastapi.tiangolo.com/)
-- [SQLAlchemy](https://docs.sqlalchemy.org/en/20/)
-- [Alembic](https://alembic.sqlalchemy.org/en/latest/)
-- [GitHub repository creation](https://docs.github.com/en/repositories/creating-and-managing-repositories/creating-a-new-repository)
-- [Codex Cloud](https://help.openai.com/en/articles/20001545-using-codex-cloud)
+- [uv Docker integration](https://docs.astral.sh/uv/guides/integration/docker/)
+- [setup-uv action](https://github.com/astral-sh/setup-uv)
+- [Flutter setup action](https://github.com/subosito/flutter-action)

@@ -1,0 +1,3 @@
+PR-00 intentionally has no revisions or business tables.
+DATABASE_URL is required by env.py. See the root README for commands.
+Add reviewed revisions in later PRs; never reset a database on app startup.
