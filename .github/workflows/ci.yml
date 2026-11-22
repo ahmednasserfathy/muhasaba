@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version: "0.10.8"
+          python-version: "3.13"
+      - run: uv sync --locked
+        working-directory: backend
+      - run: uv run --locked ruff check .
+        working-directory: backend
+      - run: uv run --locked ruff format --check .
+        working-directory: backend
+      - run: uv run --locked pytest
+        working-directory: backend
+      - name: Start local stack
+        run: |
+          cp infra/.env.example .env
+          docker compose -f infra/compose.yml up --build --wait --wait-timeout 120
+      - name: Check API and migration connection
+        run: |
+          curl --fail http://127.0.0.1:8000/health
+          docker compose -f infra/compose.yml exec -T api alembic upgrade head
+          docker compose -f infra/compose.yml exec -T api alembic current
+      - name: Stack logs
+        if: failure()
+        run: docker compose -f infra/compose.yml logs
+      - name: Stop local stack
+        if: always()
+        run: docker compose -f infra/compose.yml down
+
+  mobile:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.9"
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
