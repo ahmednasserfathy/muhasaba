@@ -28,18 +28,18 @@ jobs:
       - name: Start local stack
         run: |
           cp infra/.env.example .env
-          docker compose -f infra/compose.yml up --build --wait --wait-timeout 120
+          docker compose --env-file .env -f infra/compose.yml up --build --wait --wait-timeout 120
       - name: Check API and migration connection
         run: |
           curl --fail http://127.0.0.1:8000/health
-          docker compose -f infra/compose.yml exec -T api alembic upgrade head
-          docker compose -f infra/compose.yml exec -T api alembic current
+          docker compose --env-file .env -f infra/compose.yml exec -T api alembic upgrade head
+          docker compose --env-file .env -f infra/compose.yml exec -T api alembic current
       - name: Stack logs
         if: failure()
-        run: docker compose -f infra/compose.yml logs
+        run: docker compose --env-file .env -f infra/compose.yml logs
       - name: Stop local stack
         if: always()
-        run: docker compose -f infra/compose.yml down
+        run: docker compose --env-file .env -f infra/compose.yml down
 
   mobile:
     runs-on: ubuntu-latest

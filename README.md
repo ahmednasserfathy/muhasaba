@@ -70,14 +70,14 @@ readiness. It runs without `DATABASE_URL`. Stop the development server with Ctrl
 
 ## Local API and PostgreSQL with Compose
 
-Run from the repository root; keep the terminal in that directory so Compose
-loads the root `.env`:
+Run from the repository root. Pass the root `.env` explicitly so loading does
+not depend on Compose's project-directory defaults:
 
 ```bash
 cp infra/.env.example .env
-docker compose -f infra/compose.yml up --build -d --wait
+docker compose --env-file .env -f infra/compose.yml up --build -d --wait
 curl --fail http://127.0.0.1:8000/health
-docker compose -f infra/compose.yml exec -T api alembic upgrade head
+docker compose --env-file .env -f infra/compose.yml exec -T api alembic upgrade head
 ```
 
 Copy the example only on first setup; do not overwrite an existing `.env`.
@@ -87,8 +87,8 @@ uses a separate PostgreSQL administrator. Both published ports bind to localhost
 The API container runs as a non-root OS user.
 
 ```bash
-docker compose -f infra/compose.yml logs api db
-docker compose -f infra/compose.yml down
+docker compose --env-file .env -f infra/compose.yml logs api db
+docker compose --env-file .env -f infra/compose.yml down
 ```
 
 `down` preserves the named database volume. No automatic migration or database
