@@ -36,7 +36,7 @@ jobs:
           docker compose --env-file .env -f infra/compose.yml exec -T api alembic current
       - name: Create isolated integration database
         run: docker compose --env-file .env -f infra/compose.yml exec -T db createdb -U postgres -O muhasaba muhasaba_test
-      - name: PostgreSQL catalog and migration tests
+      - name: PostgreSQL integration tests
         working-directory: backend
         env:
           TEST_DATABASE_URL: postgresql+psycopg://muhasaba:local_app_only@127.0.0.1:5432/muhasaba_test

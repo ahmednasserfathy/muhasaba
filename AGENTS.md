@@ -2,7 +2,7 @@
 
 ## Task discipline
 
-- **First read** `docs/blueprint/10_LOCKED_CORE_MVP_AR.md`, then `docs/blueprint/README.md` and any relevant specification chapter. Current task: `codex/PR-01_CATALOG_SCORING.md`. PR-00 is merged; its scope below is historical.
+- **First read** `docs/blueprint/10_LOCKED_CORE_MVP_AR.md`, then `docs/blueprint/README.md` and any relevant specification chapter. Current task: `codex/PR-02_ACCOUNTS_AUTH.md`. PR-00 and PR-01 are merged; its scope below is historical.
 - The v1.4 **locked core overrides any contradictory v1.3 examples**. Do not reinterpret the scoring system.
 - Implement only the **requested PR scope**, in small, reviewable changes. Plan briefly, work, test, report PASS/FAIL/NOT_RUN, and stop. Never start the next PR automatically.
 - Do not add complex infrastructure or speculative features.

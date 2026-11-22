@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import 'features/auth/auth_screen.dart';
 
 void main() {
-  runApp(const MuhasabaApp());
+  runApp(const ProviderScope(child: MuhasabaApp()));
 }
 
 class MuhasabaApp extends StatelessWidget {
@@ -16,10 +19,7 @@ class MuhasabaApp extends StatelessWidget {
       supportedLocales: const [Locale('ar')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
       theme: ThemeData(colorSchemeSeed: Colors.teal),
-      home: Scaffold(
-        appBar: AppBar(title: const Text('محاسبة')),
-        body: const SafeArea(child: Center(child: Text('مرحبًا بك في محاسبة'))),
-      ),
+      home: const AuthScreen(),
     );
   }
 }
