@@ -1,10 +1,9 @@
 # Muhasaba | محاسبة النفس
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
-PostgreSQL. PR-00 provides the foundation; **PR-01 adds the catalog schema, draft
-reference seed, public catalog read API and pure Python scoring**. The mobile
-screen remains a placeholder. Accounts and journal features follow in reviewed PRs.
-See [`PR-01 scope and decisions`](codex/PR-01_CATALOG_SCORING.md).
+PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
+**PR-02 adds accounts, rotating sessions and Arabic login/register screens.**
+See [`PR-02 scope and decisions`](codex/PR-02_ACCOUNTS_AUTH.md).
 
 ## Product baseline
 
@@ -33,7 +32,7 @@ and Flutter scoring are later work.
 
 ```text
 backend/           FastAPI, SQLAlchemy metadata, Alembic and pytest
-mobile/            Flutter Android skeleton and Arabic RTL widget test
+mobile/            Flutter Arabic authentication UI and secure session storage
 infra/             Local PostgreSQL/API Compose stack and dummy env example
 .github/workflows/ Backend, Compose and Flutter checks
 codex/             PR scope and review workflow
@@ -103,7 +102,8 @@ Use URL-safe local `APP_DB_PASSWORD` values: Compose interpolates that value int
 ## Migrations
 
 `alembic upgrade head` applies `0001` (five catalog/library tables plus publication
-and immutability guards) and `0002` (eight categories, 34 draft reference cards).
+and immutability guards) and `0002` (eight categories, 34 draft reference cards), then `0003` (users,
+sessions, external identity placeholders, settings and library author FK).
 There are no seeded religious texts or published releases.
 
 `GET /api/v1/catalog?date=2026-11-19` intentionally returns 404 on a fresh database.
@@ -140,11 +140,11 @@ flutter test
 flutter run
 ```
 
-The app currently displays «محاسبة» and a welcome message in Arabic RTL. It does
-not call the API yet. Riverpod, Dio and Drift will be introduced with their first
-features rather than as unused dependencies. The Android project was generated
-with `flutter create --platforms=android --org com.muhasaba --project-name muhasaba mobile`.
-The generated application ID and debug signing are development placeholders.
+The app supports registration, login, session restoration and logout using
+Riverpod, Dio and encrypted token storage. The default debug URL targets the
+Android emulator at `http://10.0.2.2:8000/api/v1/`; start the Compose backend and
+apply migrations first. See [`mobile setup`](mobile/README.md) for device and
+release configuration. Daily journal and offline sync remain later PRs.
 
 ## Checks
 
@@ -186,9 +186,10 @@ commands. Without `TEST_DATABASE_URL`, those integration tests explicitly skip.
 | Compose build/start, online migrations | NOT_RUN locally | Docker unavailable; included in CI |
 | Android device run / APK build | NOT_RUN | Android licenses incomplete; not required for widget tests |
 
-For PR-01, 37 local tests pass and 17 PostgreSQL cases require the dedicated test
-database. Check the current PR's GitHub Actions results separately; local results do not imply CI
-or an Android device build passed.
+PR-02 local checks: 47 backend tests pass; 30 PostgreSQL integration cases
+require CI or a dedicated database. Flutter analysis passes; local Flutter tests
+are blocked by the macOS native-assets/Xcode SDK setup. See the PR-02 document
+and current GitHub Actions results for full verification.
 
 ## Troubleshooting
 

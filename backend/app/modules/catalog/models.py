@@ -116,6 +116,9 @@ class LibraryEntry(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
     archived_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_by_admin: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT", name="fk_library_created_by_admin")
+    )
 
 
 class AdhkarItem(Base):

@@ -18,9 +18,9 @@ def get_engine():
 
 def get_session():
     if not os.environ.get("DATABASE_URL"):
-        raise HTTPException(503, "Catalog database is not configured")
+        raise HTTPException(503, "Database is not configured")
     try:
         with Session(get_engine()) as session:
             yield session
     except OperationalError as exc:
-        raise HTTPException(503, "Catalog database is unavailable") from exc
+        raise HTTPException(503, "Database is unavailable") from exc

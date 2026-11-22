@@ -2,3 +2,6 @@
 0002 seeds the unverified reference catalog as DRAFT, without religious text.
 DATABASE_URL is required. See the root README and codex/PR-01_CATALOG_SCORING.md.
 Never reset or migrate a database automatically on app startup.
+0003 adds users, auth sessions, external identities, settings and library author FK.
+Its downgrade deletes accounts and sessions; use disposable test databases only.
+See codex/PR-02_ACCOUNTS_AUTH.md for authentication contracts and limitations.
