@@ -1,0 +1,321 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Muhasaba",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/api/v1/catalog": {
+      "get": {
+        "tags": [
+          "catalog"
+        ],
+        "summary": "Get Catalog",
+        "description": "Public official catalog only; no user-specific state or editorial drafts.",
+        "operationId": "get_catalog_api_v1_catalog_get",
+        "parameters": [
+          {
+            "name": "date",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "description": "Explicit local date (YYYY-MM-DD)",
+              "title": "Date"
+            },
+            "description": "Explicit local date (YYYY-MM-DD)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CatalogResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No published release for this date"
+          },
+          "503": {
+            "description": "Catalog database unavailable"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health",
+        "description": "Process liveness only; database readiness is checked separately.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "ActivityResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "titleAr": {
+            "type": "string",
+            "title": "Titlear"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "title": "Sortorder"
+          },
+          "points": {
+            "type": "integer",
+            "title": "Points"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "TOGGLE",
+              "ADHKAR_SET",
+              "FASTING"
+            ],
+            "title": "Kind"
+          },
+          "scheduleKind": {
+            "type": "string",
+            "enum": [
+              "DAILY",
+              "FASTING_DYNAMIC"
+            ],
+            "title": "Schedulekind"
+          },
+          "showDetails": {
+            "type": "boolean",
+            "title": "Showdetails"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "titleAr",
+          "sortOrder",
+          "points",
+          "kind",
+          "scheduleKind",
+          "showDetails",
+          "items"
+        ],
+        "title": "ActivityResponse"
+      },
+      "CatalogResponse": {
+        "properties": {
+          "release": {
+            "type": "string",
+            "title": "Release"
+          },
+          "categories": {
+            "items": {
+              "$ref": "#/components/schemas/CategoryResponse"
+            },
+            "type": "array",
+            "title": "Categories"
+          }
+        },
+        "type": "object",
+        "required": [
+          "release",
+          "categories"
+        ],
+        "title": "CatalogResponse"
+      },
+      "CategoryResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "titleAr": {
+            "type": "string",
+            "title": "Titlear"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "title": "Sortorder"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/ActivityResponse"
+            },
+            "type": "array",
+            "title": "Activities"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "titleAr",
+          "sortOrder",
+          "activities"
+        ],
+        "title": "CategoryResponse"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "HealthResponse": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "const": "ok",
+            "title": "Status",
+            "default": "ok"
+          }
+        },
+        "type": "object",
+        "title": "HealthResponse"
+      },
+      "ItemResponse": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "sortOrder": {
+            "type": "integer",
+            "title": "Sortorder"
+          },
+          "targetCount": {
+            "type": "integer",
+            "title": "Targetcount"
+          },
+          "textAr": {
+            "type": "string",
+            "title": "Textar"
+          },
+          "reviewStatus": {
+            "type": "string",
+            "const": "VERIFIED",
+            "title": "Reviewstatus"
+          },
+          "sourceType": {
+            "type": "string",
+            "const": "OFFICIAL",
+            "title": "Sourcetype",
+            "default": "OFFICIAL"
+          },
+          "isScoreEligible": {
+            "type": "boolean",
+            "title": "Isscoreeligible"
+          },
+          "sourceName": {
+            "type": "string",
+            "title": "Sourcename"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "title": "Sourceurl"
+          },
+          "licenseNotes": {
+            "type": "string",
+            "title": "Licensenotes"
+          }
+        },
+        "type": "object",
+        "required": [
+          "code",
+          "sortOrder",
+          "targetCount",
+          "textAr",
+          "reviewStatus",
+          "isScoreEligible",
+          "sourceName",
+          "sourceUrl",
+          "licenseNotes"
+        ],
+        "title": "ItemResponse"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

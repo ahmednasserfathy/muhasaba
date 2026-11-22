@@ -1,9 +1,10 @@
 # Muhasaba | محاسبة النفس
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
-PostgreSQL. **PR-00 implements the foundation only:** a placeholder mobile screen,
-API liveness endpoint, local database infrastructure, migration scaffolding and CI.
-Accounts, catalog, scoring and journal features follow in separate reviewed PRs.
+PostgreSQL. PR-00 provides the foundation; **PR-01 adds the catalog schema, draft
+reference seed, public catalog read API and pure Python scoring**. The mobile
+screen remains a placeholder. Accounts and journal features follow in reviewed PRs.
+See [`PR-01 scope and decisions`](codex/PR-01_CATALOG_SCORING.md).
 
 ## Product baseline
 
@@ -25,7 +26,8 @@ Official, score-eligible nested adhkar share points **inside their fixed parent
 card**, granting partial credit as their repetitions are completed. Custom user
 dua/adhkar and hiding/reordering official defaults **never** add points or change
 the parent's point budget. Support exact undo and preserve scores from previous
-days. This behavior is specified, not implemented in PR-00.
+days. PR-01 tests this rule in the pure Python scoring engine; journal integration
+and Flutter scoring are later work.
 
 ## Structure
 
@@ -100,9 +102,14 @@ Use URL-safe local `APP_DB_PASSWORD` values: Compose interpolates that value int
 
 ## Migrations
 
-`backend/alembic/versions/` is intentionally empty in PR-00. `upgrade head` checks
-the database connection and initializes Alembic bookkeeping; there are no business
-tables or revisions. `current`/`heads` therefore show no revision yet.
+`alembic upgrade head` applies `0001` (five catalog/library tables plus publication
+and immutability guards) and `0002` (eight categories, 34 draft reference cards).
+There are no seeded religious texts or published releases.
+
+`GET /api/v1/catalog?date=2026-11-19` intentionally returns 404 on a fresh database.
+Only published, verified official catalogs are exposed. The contract is also
+available in `/docs` and the checked `backend/openapi.json` snapshot. Missing DB
+configuration/connection returns 503; `/health` remains independent.
 
 For migration commands on the host with the Compose database running:
 
@@ -115,11 +122,13 @@ uv run --locked alembic current
 uv run --locked alembic heads
 ```
 
-Later PRs add model imports to Alembic metadata and create revisions with
+Later PRs add their model imports to Alembic metadata and create revisions with
 `uv run --locked alembic revision --autogenerate -m "describe schema change"`.
-Review generated upgrade/downgrade operations before applying them. There is no
-PR-00 schema change to roll back. Do not use `create_all()` or destructive resets
-as a migration strategy.
+Review generated upgrade/downgrade operations before applying them. PR-01
+downgrades remove seed data and catalog tables; they are destructive and must not
+be run against live data without a reviewed restore plan. Published/referenced
+seed data is protected from the seed downgrade. Do not use `create_all()` or
+destructive resets as a migration strategy.
 
 ## Mobile
 
@@ -156,9 +165,12 @@ flutter test
 ```
 
 CI runs these checks plus a fresh Compose stack, live `/health` request and
-`alembic upgrade head`/`current` through the application database role.
+`alembic upgrade head`/`current` through the application database role. PR-01 also
+runs PostgreSQL integration tests on a dedicated `muhasaba_test` database, including
+migration rollback/reapply and schema parity. See the PR-01 scope document for
+commands. Without `TEST_DATABASE_URL`, those integration tests explicitly skip.
 
-### Local verification (22 November 2026)
+### PR-00 local verification (22 November 2026, historical baseline)
 
 | Check | Result | Evidence / limitation |
 |---|---|---|
@@ -174,7 +186,8 @@ CI runs these checks plus a fresh Compose stack, live `/health` request and
 | Compose build/start, online migrations | NOT_RUN locally | Docker unavailable; included in CI |
 | Android device run / APK build | NOT_RUN | Android licenses incomplete; not required for widget tests |
 
-Check the PR's GitHub Actions results separately; local results do not imply CI
+For PR-01, 37 local tests pass and 17 PostgreSQL cases require the dedicated test
+database. Check the current PR's GitHub Actions results separately; local results do not imply CI
 or an Android device build passed.
 
 ## Troubleshooting
