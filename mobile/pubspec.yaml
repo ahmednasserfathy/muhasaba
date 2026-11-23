@@ -8,12 +8,16 @@ environment:
 
 dependencies:
   dio: ^5.11.1
+  drift: ^2.35.4
   flutter:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.3.2
   flutter_secure_storage: ^11.2.0
+  path_provider: ^2.1.6
+  timezone: ^0.11.2
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:
