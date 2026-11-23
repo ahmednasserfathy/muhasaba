@@ -189,9 +189,9 @@ commands. Without `TEST_DATABASE_URL`, those integration tests explicitly skip.
 | Compose build/start, online migrations | NOT_RUN locally | Docker unavailable; included in CI |
 | Android device run / APK build | NOT_RUN | Android licenses incomplete; not required for widget tests |
 
-PR-02 local checks: 47 backend tests pass; 30 PostgreSQL integration cases
+PR-03 local checks: 54 backend tests pass; 46 PostgreSQL integration cases
 require CI or a dedicated database. Flutter analysis passes; local Flutter tests
-are blocked by the macOS native-assets/Xcode SDK setup. See the PR-02 document
+are blocked by the macOS native-assets/Xcode SDK setup. See the PR-03 document
 and current GitHub Actions results for full verification.
 
 ## Troubleshooting
