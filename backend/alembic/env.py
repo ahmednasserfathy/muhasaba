@@ -7,6 +7,7 @@ from alembic import context
 from app.core.db import Base
 from app.modules.auth import models as auth_models  # noqa: F401
 from app.modules.catalog import models  # noqa: F401
+from app.modules.fasting import models as fasting_models  # noqa: F401
 from app.modules.journal import models as journal_models  # noqa: F401
 
 config = context.config

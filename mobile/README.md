@@ -38,3 +38,8 @@ On this Mac, Flutter tests are blocked by the native objective_c dependency's
 Xcode SDK lookup; Linux CI runs the client and widget tests. Secure storage tests
 mock the platform channel: real Android keystore behavior still needs device QA.
 The generated application ID and signing remain development placeholders.
+
+PR-04 adds fasting ADD (optional type), SKIP and DEFAULT. The date picker includes
+the next 365 days for planning only. Load each plan online once before offline
+editing; future plans need no published catalog. Drift schema v2 preserves v1
+cached days and pending writes. See `../codex/PR-04_FASTING.md`.

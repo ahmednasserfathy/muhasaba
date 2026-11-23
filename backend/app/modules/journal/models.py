@@ -31,6 +31,7 @@ class JournalDay(Base):
     catalog_release_id: Mapped[UUID] = mapped_column(
         ForeignKey("catalog_releases.id", ondelete="RESTRICT")
     )
+    fasting_baseline: Mapped[dict | None] = mapped_column(JSONB)
     timezone_at_creation: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()

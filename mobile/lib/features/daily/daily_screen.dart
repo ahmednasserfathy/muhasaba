@@ -27,6 +27,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
   late final JournalRepository repository;
   late String date;
   DayData? day;
+  Map<String, dynamic>? fasting;
   int pending = 0;
   bool blocked = false;
   String? error;
@@ -69,11 +70,13 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
     final selected = date;
     try {
       final loaded = await repository.read(selected);
+      final plan = await repository.readFasting(selected);
       final count = await repository.pendingCount();
       final conflict = await repository.blocked(selected);
       if (mounted && selected == date) {
         setState(() {
           day = loaded;
+          fasting = plan;
           pending = count;
           blocked = conflict;
         });
@@ -127,12 +130,13 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
       firstDate: DateTime.parse(
         day?.start ?? widget.account.trackingStartDate ?? '1900-01-01',
       ),
-      lastDate: DateTime.parse(repository.today),
+      lastDate: DateTime.parse(repository.today).add(const Duration(days: 365)),
     );
     if (selected != null && mounted) {
       setState(() {
         date = selected.toIso8601String().split('T').first;
         day = null;
+        fasting = null;
         error = null;
       });
       await _open();
@@ -142,6 +146,31 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
   Future<void> _resolve() async {
     final selected = date;
     try {
+      if (day == null) {
+        final remote = await repository.serverFasting(selected);
+        if (!mounted) return;
+        final accept = await showDialog<bool>(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text('مراجعة خطة الصيام'),
+            content: Text(
+              'الجهاز: ${_fastingReason(fasting?['reason'])}\nالخادم: ${_fastingReason(remote['reason'])}\nاعتماد الخادم يلغي تعديلات الخطة المعلقة لهذا اليوم.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('احتفظ بتعديلاتي'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(context, true),
+                child: const Text('اعتماد الخادم'),
+              ),
+            ],
+          ),
+        );
+        if (accept == true) await repository.useServerFasting(remote);
+        return;
+      }
       final remote = await repository.serverDay(selected);
       if (!mounted) return;
       final accept = await showDialog<bool>(
@@ -155,6 +184,9 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
               children: [
                 const Text(
                   'تعديلات الجهاز ما زالت محفوظة. اعتماد الخادم يلغي التعديلات المعلقة لهذا اليوم فقط. يمكنك الاحتفاظ بها والعودة لاحقًا.',
+                ),
+                Text(
+                  'خطة الصيام — الجهاز: ${_fastingReason(fasting?['reason'])}، الخادم: ${_fastingReason(remote.json['fasting']?['reason'])}',
                 ),
                 for (final c in remote.cards) ...[
                   Text(
@@ -395,7 +427,10 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
                   ),
               ],
             ),
-            if (day == null)
+            if (fasting != null) _fastingPanel(),
+            if (date.compareTo(repository.today) > 0)
+              const Text('تخطيط فقط — تسجيل الإنجاز متاح في يومه.'),
+            if (day == null && date.compareTo(repository.today) <= 0)
               const Text(
                 'حمّل اليوم من الخادم مرة واحدة لتتمكن من استخدامه بدون اتصال.',
               ),
@@ -452,34 +487,118 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
                                 )
                               : null,
                         ),
-                        TextButton(
-                          onPressed: blocked
-                              ? null
-                              : () => _edit(
-                                  'state',
-                                  card['code'] as String,
-                                  state: card['state'] == 'EXCLUDED'
-                                      ? 'PENDING'
-                                      : 'EXCLUDED',
-                                ),
-                          child: Text(
-                            card['state'] == 'EXCLUDED'
-                                ? 'إعادة إدراج اليوم'
-                                : 'استثناء من هذا اليوم',
+                        if (card['kind'] != 'FASTING' ||
+                            card['state'] == 'EXCLUDED')
+                          TextButton(
+                            onPressed: blocked
+                                ? null
+                                : () => _edit(
+                                    'state',
+                                    card['code'] as String,
+                                    state: card['state'] == 'EXCLUDED'
+                                        ? 'PENDING'
+                                        : 'EXCLUDED',
+                                  ),
+                            child: Text(
+                              card['state'] == 'EXCLUDED'
+                                  ? 'إعادة إدراج اليوم'
+                                  : 'استثناء من هذا اليوم',
+                            ),
                           ),
-                        ),
                       ],
                     ),
                   ),
               ],
-            const Text(
-              'الصيام هنا حسب الاثنين والخميس فقط؛ تخطيط الصيام ورمضان في المرحلة التالية.',
-            ),
           ],
         ),
       ),
     );
   }
+
+  Future<void> _plan(String mode, [String? type]) async {
+    try {
+      await repository.planFasting(date, mode, fastType: type);
+      if (mounted) setState(() => error = null);
+    } catch (e) {
+      if (mounted) {
+        setState(
+          () => error = e is AuthFailure ? e.message : 'تعذر حفظ خطة الصيام.',
+        );
+      }
+    }
+  }
+
+  String _fastingReason(dynamic reason) => switch (reason) {
+    'SKIP' => 'مستثنى من النقاط',
+    'ADDED' => 'صيام أضفته',
+    'RAMADAN' => 'رمضان — تواريخ مؤكدة',
+    'WEEKLY' => 'الاثنين والخميس',
+    _ => 'غير مخطط',
+  };
+  String _fastType(dynamic type) => switch (type) {
+    'VOLUNTARY' => 'تطوع',
+    'MAKEUP' => 'قضاء',
+    'OTHER' => 'آخر',
+    _ => 'بدون تصنيف',
+  };
+
+  Widget _fastingPanel() => Card(
+    child: Padding(
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'خطة الصيام: ${_fastingReason(fasting!['reason'])}',
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          Text('المنطقة: ${fasting!['regionKey']}'),
+          if (fasting!['fastType'] != null)
+            Text('النوع: ${_fastType(fasting!['fastType'])}'),
+          if (fasting!['calendarStatus'] != 'CONFIRMED')
+            const Text(
+              'لا توجد تواريخ رمضان مؤكدة لهذا اليوم في منطقتك. يمكنك إضافة اليوم يدويًا؛ تأكيد التقويم من مصدر موثوق مسؤولية الإدارة.',
+            ),
+          if (fasting!['sourceUrl'] != null)
+            SelectableText('مصدر التقويم: ${fasting!['sourceUrl']}'),
+          if (fasting!['pinned'] == true)
+            const Text('قاعدة التقويم مثبتة مع سجل هذا اليوم.'),
+          const Text(
+            'التخطيط لا يسجل إتمام الصيام. الاستثناء يزيل نقاطه الممكنة دون طلب سبب.',
+          ),
+          Wrap(
+            spacing: 8,
+            children: [
+              PopupMenuButton<String>(
+                enabled: !blocked,
+                tooltip: 'إضافة صيام',
+                onSelected: (value) =>
+                    _plan('ADD', value == 'NONE' ? null : value),
+                itemBuilder: (_) => [
+                  const PopupMenuItem(value: 'NONE', child: Text('بدون تصنيف')),
+                  const PopupMenuItem(value: 'VOLUNTARY', child: Text('تطوع')),
+                  const PopupMenuItem(value: 'MAKEUP', child: Text('قضاء')),
+                  const PopupMenuItem(value: 'OTHER', child: Text('آخر')),
+                ],
+                child: const Padding(
+                  padding: EdgeInsets.all(12),
+                  child: Text('أضف صيام اليوم'),
+                ),
+              ),
+              TextButton(
+                onPressed: blocked ? null : () => _plan('SKIP'),
+                child: const Text('استثناء الصيام'),
+              ),
+              TextButton(
+                onPressed: blocked ? null : () => _plan('DEFAULT'),
+                child: const Text('الجدول الافتراضي'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
 
   String _status(String value) => switch (value) {
     'COMPLETED' => 'مكتمل',

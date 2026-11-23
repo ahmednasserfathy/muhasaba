@@ -15,6 +15,7 @@ from app.modules.catalog.scoring import (
     score_card,
     score_day,
 )
+from app.modules.fasting import service as fasting_service
 from app.modules.journal.models import (
     ActivityState,
     AdhkarCount,
@@ -81,6 +82,7 @@ def day_view(db, user, day_date):
             )
         }
     )
+    fasting = fasting_service.view(db, user, day_date, day)
     cards, scores = [], []
     for a in sorted(
         release.activities, key=lambda a: (a.category.sort_order, a.sort_order)
@@ -107,7 +109,7 @@ def day_view(db, user, day_date):
                     license_notes=i.license_notes,
                 )
             )
-        eligible = (a.kind != "FASTING" or day_date.weekday() in (0, 3)) and (
+        eligible = (a.kind != "FASTING" or fasting.eligible) and (
             state is None or state.state != "EXCLUDED"
         )
         score = score_card(
@@ -155,6 +157,7 @@ def day_view(db, user, day_date):
         tracking_start_date=user.tracking_start_date,
         timezone=user.timezone,
         catalog_release=release.code,
+        fasting=fasting.model_dump(mode="json", by_alias=True),
         activities=cards,
         summary=Summary(
             earned=float(summary.earned),
@@ -224,7 +227,7 @@ def _write(db, user, day_date, kind, key, data):
             raise HTTPException(422, "Set completion is derived from counters")
         if (
             activity.kind == "FASTING"
-            and day_date.weekday() not in (0, 3)
+            and not fasting_service.view(db, user, day_date, day).eligible
             and data.state == "COMPLETED"
         ):
             raise HTTPException(422, "Fasting is not planned for this date")
@@ -239,6 +242,7 @@ def _write(db, user, day_date, kind, key, data):
             local_date=day_date,
             catalog_release_id=release.id,
             timezone_at_creation=user.timezone,
+            fasting_baseline=fasting_service.baseline(db, user, day_date),
         )
         db.add(day)
         db.flush()

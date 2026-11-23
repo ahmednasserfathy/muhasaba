@@ -2,7 +2,8 @@
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
 PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
-**PR-03 adds daily cards, reversible counters and a persistent offline outbox.**
+**PR-04 adds offline fasting plans and sourced regional Ramadan calendars.**
+See [`PR-04 contracts and setup`](codex/PR-04_FASTING.md).
 See [`PR-03 scope, API and demo`](codex/PR-03_CORE_JOURNAL.md).
 
 ## Product baseline
@@ -104,7 +105,8 @@ Use URL-safe local `APP_DB_PASSWORD` values: Compose interpolates that value int
 `alembic upgrade head` applies `0001` (five catalog/library tables plus publication
 and immutability guards) and `0002` (eight categories, 34 draft reference cards), then `0003` (users,
 sessions, external identity placeholders, settings and library author FK), then
-`0004` (daily journals, official snapshots and mutation receipts).
+`0004` (daily journals, official snapshots and mutation receipts), then
+`0005` (fasting overrides, regional calendars and preserved daily baselines).
 There are no seeded religious texts or published releases.
 
 `GET /api/v1/catalog?date=2026-11-19` intentionally returns 404 on a fresh database.
@@ -147,7 +149,7 @@ Android emulator at `http://10.0.2.2:8000/api/v1/`; start the Compose backend an
 apply migrations first. See [`mobile setup`](mobile/README.md) for device and
 release configuration. Open «المحاسبة اليوم» from the account page for cached daily tracking and sync.
 Published content is required; a guarded synthetic 34-card demo is documented in
-[PR-03](codex/PR-03_CORE_JOURNAL.md). Ramadan/planned fasting and reports follow later.
+[PR-03](codex/PR-03_CORE_JOURNAL.md). Fasting plans also work without a published catalog; reports follow in PR-05.
 
 ## Checks
 

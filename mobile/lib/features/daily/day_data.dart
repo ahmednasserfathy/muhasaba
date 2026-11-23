@@ -39,16 +39,33 @@ class DayData {
   static List<Map<String, dynamic>> items(Map<String, dynamic> card) =>
       (card['items'] as List).cast<Map<String, dynamic>>();
 
+  static bool fastingEligible(Map<String, dynamic>? plan, String date) {
+    if (plan == null) return [1, 4].contains(DateTime.parse(date).weekday);
+    if (plan['mode'] == 'SKIP') return false;
+    if (plan['mode'] == 'ADD') return true;
+    return ['RAMADAN', 'WEEKLY'].contains(plan['baseReason']);
+  }
+
+  static void recalculatePlan(Map<String, dynamic> plan) {
+    plan['reason'] = plan['mode'] == 'SKIP'
+        ? 'SKIP'
+        : plan['mode'] == 'ADD'
+        ? 'ADDED'
+        : plan['baseReason'];
+    plan['eligible'] = fastingEligible(plan, plan['date'] as String);
+  }
+
   void recalculate() {
     var earned = Fraction(0);
     var possible = 0;
     for (final card in cards) {
       final weight = card['weight'] as int;
       final fasting = card['kind'] == 'FASTING';
-      final weekday = DateTime.parse(date).weekday;
+
       final eligible =
           card['state'] != 'EXCLUDED' &&
-          (!fasting || weekday == 1 || weekday == 4);
+          (!fasting ||
+              fastingEligible(json['fasting'] as Map<String, dynamic>?, date));
       var fraction = Fraction(0);
       final official = items(card)
           .where(

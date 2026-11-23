@@ -516,6 +516,122 @@
         }
       }
     },
+    "/api/v1/fasting/calendar": {
+      "get": {
+        "tags": [
+          "fasting"
+        ],
+        "summary": "Calendar",
+        "operationId": "calendar_api_v1_fasting_calendar_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CalendarView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/days/{day_date}/fasting-plan": {
+      "put": {
+        "tags": [
+          "fasting"
+        ],
+        "summary": "Set Plan",
+        "operationId": "set_plan_api_v1_days__day_date__fasting_plan_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "day_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day Date"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlanWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FastingView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -597,6 +713,35 @@
           "items"
         ],
         "title": "ActivityResponse"
+      },
+      "CalendarView": {
+        "properties": {
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          },
+          "trackingStartDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Trackingstartdate"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/FastingView"
+            },
+            "type": "array",
+            "title": "Days"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "today",
+          "trackingStartDate",
+          "days"
+        ],
+        "title": "CalendarView"
       },
       "CardView": {
         "properties": {
@@ -839,6 +984,16 @@
             "type": "string",
             "title": "Catalogrelease"
           },
+          "fasting": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FastingView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "activities": {
             "items": {
               "$ref": "#/components/schemas/CardView"
@@ -862,6 +1017,112 @@
           "summary"
         ],
         "title": "DayView"
+      },
+      "FastingView": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "regionKey": {
+            "type": "string",
+            "title": "Regionkey"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "DEFAULT",
+              "ADD",
+              "SKIP"
+            ],
+            "title": "Mode"
+          },
+          "fastType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "VOLUNTARY",
+                  "MAKEUP",
+                  "OTHER"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fasttype"
+          },
+          "rowVersion": {
+            "type": "integer",
+            "title": "Rowversion"
+          },
+          "eligible": {
+            "type": "boolean",
+            "title": "Eligible"
+          },
+          "reason": {
+            "type": "string",
+            "enum": [
+              "SKIP",
+              "ADDED",
+              "RAMADAN",
+              "WEEKLY",
+              "UNPLANNED"
+            ],
+            "title": "Reason"
+          },
+          "baseReason": {
+            "type": "string",
+            "enum": [
+              "RAMADAN",
+              "WEEKLY",
+              "UNPLANNED"
+            ],
+            "title": "Basereason"
+          },
+          "calendarStatus": {
+            "type": "string",
+            "enum": [
+              "CONFIRMED",
+              "PROVISIONAL",
+              "UNAVAILABLE"
+            ],
+            "title": "Calendarstatus"
+          },
+          "sourceUrl": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Sourceurl"
+          },
+          "pinned": {
+            "type": "boolean",
+            "title": "Pinned"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "regionKey",
+          "mode",
+          "fastType",
+          "rowVersion",
+          "eligible",
+          "reason",
+          "baseReason",
+          "calendarStatus",
+          "sourceUrl",
+          "pinned"
+        ],
+        "title": "FastingView"
       },
       "HTTPValidationError": {
         "properties": {
@@ -1012,6 +1273,54 @@
           "licenseNotes"
         ],
         "title": "ItemView"
+      },
+      "PlanWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "DEFAULT",
+              "ADD",
+              "SKIP"
+            ],
+            "title": "Mode"
+          },
+          "fastType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "VOLUNTARY",
+                  "MAKEUP",
+                  "OTHER"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fasttype"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "mode"
+        ],
+        "title": "PlanWrite"
       },
       "RefreshRequest": {
         "properties": {

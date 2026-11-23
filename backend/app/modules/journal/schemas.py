@@ -5,6 +5,8 @@ from uuid import UUID
 from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 
+from app.modules.fasting.schemas import FastingView
+
 
 class JournalModel(BaseModel):
     model_config = ConfigDict(
@@ -79,5 +81,6 @@ class DayView(JournalModel):
     tracking_start_date: date
     timezone: str
     catalog_release: str
+    fasting: FastingView | None = None
     activities: list[CardView]
     summary: Summary
