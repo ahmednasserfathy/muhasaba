@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'auth_controller.dart';
+import '../daily/daily_screen.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -89,6 +90,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     if (!account.emailVerified)
                       const Text('البريد لم يتم تأكيده بعد.'),
                     const SizedBox(height: 24),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => DailyScreen(account: account),
+                        ),
+                      ),
+                      child: const Text('المحاسبة اليوم'),
+                    ),
                     FilledButton(
                       onPressed: state.busy ? null : controller.logout,
                       child: const Text('تسجيل الخروج'),

@@ -2,8 +2,8 @@
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
 PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
-**PR-02 adds accounts, rotating sessions and Arabic login/register screens.**
-See [`PR-02 scope and decisions`](codex/PR-02_ACCOUNTS_AUTH.md).
+**PR-03 adds daily cards, reversible counters and a persistent offline outbox.**
+See [`PR-03 scope, API and demo`](codex/PR-03_CORE_JOURNAL.md).
 
 ## Product baseline
 
@@ -103,7 +103,8 @@ Use URL-safe local `APP_DB_PASSWORD` values: Compose interpolates that value int
 
 `alembic upgrade head` applies `0001` (five catalog/library tables plus publication
 and immutability guards) and `0002` (eight categories, 34 draft reference cards), then `0003` (users,
-sessions, external identity placeholders, settings and library author FK).
+sessions, external identity placeholders, settings and library author FK), then
+`0004` (daily journals, official snapshots and mutation receipts).
 There are no seeded religious texts or published releases.
 
 `GET /api/v1/catalog?date=2026-11-19` intentionally returns 404 on a fresh database.
@@ -144,7 +145,9 @@ The app supports registration, login, session restoration and logout using
 Riverpod, Dio and encrypted token storage. The default debug URL targets the
 Android emulator at `http://10.0.2.2:8000/api/v1/`; start the Compose backend and
 apply migrations first. See [`mobile setup`](mobile/README.md) for device and
-release configuration. Daily journal and offline sync remain later PRs.
+release configuration. Open «المحاسبة اليوم» from the account page for cached daily tracking and sync.
+Published content is required; a guarded synthetic 34-card demo is documented in
+[PR-03](codex/PR-03_CORE_JOURNAL.md). Ramadan/planned fasting and reports follow later.
 
 ## Checks
 
@@ -186,9 +189,9 @@ commands. Without `TEST_DATABASE_URL`, those integration tests explicitly skip.
 | Compose build/start, online migrations | NOT_RUN locally | Docker unavailable; included in CI |
 | Android device run / APK build | NOT_RUN | Android licenses incomplete; not required for widget tests |
 
-PR-02 local checks: 47 backend tests pass; 30 PostgreSQL integration cases
+PR-03 local checks: 54 backend tests pass; 46 PostgreSQL integration cases
 require CI or a dedicated database. Flutter analysis passes; local Flutter tests
-are blocked by the macOS native-assets/Xcode SDK setup. See the PR-02 document
+are blocked by the macOS native-assets/Xcode SDK setup. See the PR-03 document
 and current GitHub Actions results for full verification.
 
 ## Troubleshooting

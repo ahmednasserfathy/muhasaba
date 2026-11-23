@@ -241,6 +241,281 @@
         ]
       }
     },
+    "/api/v1/days/today": {
+      "get": {
+        "tags": [
+          "journal"
+        ],
+        "summary": "Get Today",
+        "operationId": "get_today_api_v1_days_today_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayView"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/days/{day_date}": {
+      "get": {
+        "tags": [
+          "journal"
+        ],
+        "summary": "Get Day",
+        "operationId": "get_day_api_v1_days__day_date__get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "day_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/days/{day_date}/activities/{code}": {
+      "put": {
+        "tags": [
+          "journal"
+        ],
+        "summary": "Set State",
+        "operationId": "set_state_api_v1_days__day_date__activities__code__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "day_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day Date"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StateWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/days/{day_date}/adhkar/{item_key}": {
+      "put": {
+        "tags": [
+          "journal"
+        ],
+        "summary": "Set Count",
+        "operationId": "set_count_api_v1_days__day_date__adhkar__item_key__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "day_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day Date"
+            }
+          },
+          {
+            "name": "item_key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Item Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CountWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/days/{day_date}/adhkar-sets/{code}": {
+      "put": {
+        "tags": [
+          "journal"
+        ],
+        "summary": "Set All",
+        "operationId": "set_all_api_v1_days__day_date__adhkar_sets__code__put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "day_date",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "Day Date"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DayView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -323,6 +598,109 @@
         ],
         "title": "ActivityResponse"
       },
+      "CardView": {
+        "properties": {
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "categoryCode": {
+            "type": "string",
+            "title": "Categorycode"
+          },
+          "categoryTitleAr": {
+            "type": "string",
+            "title": "Categorytitlear"
+          },
+          "titleAr": {
+            "type": "string",
+            "title": "Titlear"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "TOGGLE",
+              "ADHKAR_SET",
+              "FASTING"
+            ],
+            "title": "Kind"
+          },
+          "weight": {
+            "type": "integer",
+            "title": "Weight"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "COMPLETED",
+              "EXCLUDED"
+            ],
+            "title": "State"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "PARTIAL",
+              "COMPLETED",
+              "EXCLUDED"
+            ],
+            "title": "Status"
+          },
+          "rowVersion": {
+            "type": "integer",
+            "title": "Rowversion"
+          },
+          "eligible": {
+            "type": "boolean",
+            "title": "Eligible"
+          },
+          "earnedPoints": {
+            "type": "number",
+            "title": "Earnedpoints"
+          },
+          "possiblePoints": {
+            "type": "integer",
+            "title": "Possiblepoints"
+          },
+          "officialCompleted": {
+            "type": "integer",
+            "title": "Officialcompleted"
+          },
+          "officialTotal": {
+            "type": "integer",
+            "title": "Officialtotal"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemView"
+            },
+            "type": "array",
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "code",
+          "categoryCode",
+          "categoryTitleAr",
+          "titleAr",
+          "kind",
+          "weight",
+          "state",
+          "status",
+          "rowVersion",
+          "eligible",
+          "earnedPoints",
+          "possiblePoints",
+          "officialCompleted",
+          "officialTotal",
+          "items"
+        ],
+        "title": "CardView"
+      },
       "CatalogResponse": {
         "properties": {
           "release": {
@@ -375,6 +753,42 @@
         ],
         "title": "CategoryResponse"
       },
+      "CountWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Catalogrelease"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "completedCount": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 0.0,
+            "title": "Completedcount"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "catalogRelease",
+          "expectedVersion",
+          "completedCount"
+        ],
+        "title": "CountWrite"
+      },
       "Credentials": {
         "properties": {
           "email": {
@@ -399,6 +813,55 @@
           "password"
         ],
         "title": "Credentials"
+      },
+      "DayView": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          },
+          "trackingStartDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Trackingstartdate"
+          },
+          "timezone": {
+            "type": "string",
+            "title": "Timezone"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "title": "Catalogrelease"
+          },
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/CardView"
+            },
+            "type": "array",
+            "title": "Activities"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "today",
+          "trackingStartDate",
+          "timezone",
+          "catalogRelease",
+          "activities",
+          "summary"
+        ],
+        "title": "DayView"
       },
       "HTTPValidationError": {
         "properties": {
@@ -485,6 +948,71 @@
         ],
         "title": "ItemResponse"
       },
+      "ItemView": {
+        "properties": {
+          "itemKey": {
+            "type": "string",
+            "title": "Itemkey"
+          },
+          "code": {
+            "type": "string",
+            "title": "Code"
+          },
+          "textAr": {
+            "type": "string",
+            "title": "Textar"
+          },
+          "targetCount": {
+            "type": "integer",
+            "title": "Targetcount"
+          },
+          "completedCount": {
+            "type": "integer",
+            "title": "Completedcount"
+          },
+          "rowVersion": {
+            "type": "integer",
+            "title": "Rowversion"
+          },
+          "sourceType": {
+            "type": "string",
+            "const": "OFFICIAL",
+            "title": "Sourcetype",
+            "default": "OFFICIAL"
+          },
+          "isScoreEligible": {
+            "type": "boolean",
+            "title": "Isscoreeligible"
+          },
+          "sourceName": {
+            "type": "string",
+            "title": "Sourcename"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "title": "Sourceurl"
+          },
+          "licenseNotes": {
+            "type": "string",
+            "title": "Licensenotes"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "itemKey",
+          "code",
+          "textAr",
+          "targetCount",
+          "completedCount",
+          "rowVersion",
+          "isScoreEligible",
+          "sourceName",
+          "sourceUrl",
+          "licenseNotes"
+        ],
+        "title": "ItemView"
+      },
       "RefreshRequest": {
         "properties": {
           "refreshToken": {
@@ -546,6 +1074,118 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "SetWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Catalogrelease"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "COMPLETE_ALL",
+              "CLEAR_ALL"
+            ],
+            "title": "Action"
+          },
+          "expectedVersions": {
+            "additionalProperties": {
+              "type": "integer",
+              "maximum": 2147483646.0,
+              "minimum": 0.0
+            },
+            "type": "object",
+            "maxProperties": 1000,
+            "title": "Expectedversions"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "catalogRelease",
+          "action",
+          "expectedVersions"
+        ],
+        "title": "SetWrite"
+      },
+      "StateWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Catalogrelease"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "COMPLETED",
+              "EXCLUDED"
+            ],
+            "title": "State"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "catalogRelease",
+          "expectedVersion",
+          "state"
+        ],
+        "title": "StateWrite"
+      },
+      "Summary": {
+        "properties": {
+          "earned": {
+            "type": "number",
+            "title": "Earned"
+          },
+          "possible": {
+            "type": "integer",
+            "title": "Possible"
+          },
+          "percent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "earned",
+          "possible",
+          "percent"
+        ],
+        "title": "Summary"
       },
       "TokenResponse": {
         "properties": {

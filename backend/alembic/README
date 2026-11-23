@@ -5,3 +5,5 @@ Never reset or migrate a database automatically on app startup.
 0003 adds users, auth sessions, external identities, settings and library author FK.
 Its downgrade deletes accounts and sessions; use disposable test databases only.
 See codex/PR-02_ACCOUNTS_AUTH.md for authentication contracts and limitations.
+0004 adds daily journal snapshots and mutation receipts. Downgrade deletes history.
+See codex/PR-03_CORE_JOURNAL.md for the date/release and offline contracts.

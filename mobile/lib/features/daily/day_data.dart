@@ -1,0 +1,102 @@
+import 'dart:convert';
+
+// Exact arithmetic until the display boundary, matching Python Fraction.
+class Fraction {
+  Fraction(int n, [int d = 1]) : this.big(BigInt.from(n), BigInt.from(d));
+  Fraction.big(BigInt n, BigInt d)
+    : numerator = n ~/ n.gcd(d),
+      denominator = d ~/ n.gcd(d);
+  final BigInt numerator;
+  final BigInt denominator;
+  Fraction operator +(Fraction other) => Fraction.big(
+    numerator * other.denominator + other.numerator * denominator,
+    denominator * other.denominator,
+  );
+  Fraction times(int n) =>
+      Fraction.big(numerator * BigInt.from(n), denominator);
+  Fraction dividedBy(int n) =>
+      Fraction.big(numerator, denominator * BigInt.from(n));
+  double get decimal => numerator.toDouble() / denominator.toDouble();
+  int get rounded =>
+      ((numerator * BigInt.two + denominator) ~/ (denominator * BigInt.two))
+          .toInt();
+}
+
+class DayData {
+  DayData(this.json);
+  final Map<String, dynamic> json;
+  factory DayData.decode(String value) =>
+      DayData(jsonDecode(value) as Map<String, dynamic>);
+  String encode() => jsonEncode(json);
+  String get date => json['date'] as String;
+  String get release => json['catalogRelease'] as String;
+  String get timezone => json['timezone'] as String;
+  String get start => json['trackingStartDate'] as String;
+  List<Map<String, dynamic>> get cards =>
+      (json['activities'] as List).cast<Map<String, dynamic>>();
+  Map<String, dynamic> card(String code) =>
+      cards.firstWhere((c) => c['code'] == code);
+  static List<Map<String, dynamic>> items(Map<String, dynamic> card) =>
+      (card['items'] as List).cast<Map<String, dynamic>>();
+
+  void recalculate() {
+    var earned = Fraction(0);
+    var possible = 0;
+    for (final card in cards) {
+      final weight = card['weight'] as int;
+      final fasting = card['kind'] == 'FASTING';
+      final weekday = DateTime.parse(date).weekday;
+      final eligible =
+          card['state'] != 'EXCLUDED' &&
+          (!fasting || weekday == 1 || weekday == 4);
+      var fraction = Fraction(0);
+      final official = items(card)
+          .where(
+            (i) =>
+                i['sourceType'] == 'OFFICIAL' && i['isScoreEligible'] == true,
+          )
+          .toList();
+      if (card['kind'] == 'ADHKAR_SET') {
+        if (official.isEmpty) {
+          throw StateError('Missing official scoring items');
+        }
+        for (final item in official) {
+          final target = item['targetCount'] as int;
+          fraction =
+              fraction +
+              Fraction(
+                (item['completedCount'] as int).clamp(0, target),
+                target,
+              );
+        }
+        fraction = fraction.dividedBy(official.length);
+      } else if (card['state'] == 'COMPLETED') {
+        fraction = Fraction(1);
+      }
+      final points = eligible ? fraction.times(weight) : Fraction(0);
+      earned = earned + points;
+      possible += eligible ? weight : 0;
+      card['eligible'] = eligible;
+      card['earnedPoints'] = points.decimal;
+      card['possiblePoints'] = eligible ? weight : 0;
+      card['officialTotal'] = official.length;
+      card['officialCompleted'] = official
+          .where((i) => i['completedCount'] == i['targetCount'])
+          .length;
+      card['status'] = !eligible
+          ? 'EXCLUDED'
+          : fraction.numerator == BigInt.zero
+          ? 'PENDING'
+          : fraction.numerator == fraction.denominator
+          ? 'COMPLETED'
+          : 'PARTIAL';
+    }
+    json['summary'] = {
+      'earned': earned.decimal,
+      'possible': possible,
+      'percent': possible == 0
+          ? null
+          : earned.times(100).dividedBy(possible).rounded,
+    };
+  }
+}
