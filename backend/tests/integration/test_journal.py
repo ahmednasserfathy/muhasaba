@@ -4,7 +4,7 @@ from uuid import uuid4
 
 import pytest
 from fastapi import HTTPException
-from sqlalchemy import delete, func, select
+from sqlalchemy import create_engine, func, select, text
 from sqlalchemy.orm import Session
 from test_auth import header, register
 from test_catalog import draft, publish
@@ -15,7 +15,6 @@ from app.modules.auth.security import RateLimiter
 from app.modules.catalog.models import Activity, AdhkarItem
 from app.modules.journal import service
 from app.modules.journal.models import (
-    ActivityState,
     AdhkarCount,
     JournalDay,
     MutationReceipt,
@@ -232,7 +231,7 @@ def test_history_pins_release_and_item_snapshot(client, session, journal):
     original = client.get(f"/api/v1/days/{DAY}").json()
     library.text_ar = "تغيير اختبار"
     library.status = "ARCHIVED"
-    newer, _, _, _ = draft(session, DAY, points=10)
+    newer, _, _, _ = draft(session, DAY - timedelta(days=1), points=10)
     publish(session, newer)
     session.commit()
     assert client.get(f"/api/v1/days/{DAY}").json() == original
@@ -284,71 +283,57 @@ def test_cross_user_isolation_and_mutation_ids(client, journal):
 
 
 def test_concurrent_first_writes_and_duplicate_receipts(migrated_engine, monkeypatch):
+    from conftest import migration_config
+
+    from alembic import command
+
     monkeypatch.setattr(service, "today", lambda user: DAY)
-    # Catalog fixture is rolled back after this committed-user concurrency test.
+    # Independent schema: published fixtures cannot be deleted by seed downgrade.
+    # migrated_engine already enforces a disposable PostgreSQL *_test database.
+    schema = "journal_concurrency_" + uuid4().hex
     with migrated_engine.begin() as connection:
-        with Session(bind=connection) as db:
-            release, group, _, _ = draft(db, DAY - timedelta(days=10))
+        connection.execute(text(f'CREATE SCHEMA "{schema}"'))
+    engine = create_engine(
+        migrated_engine.url, connect_args={"options": f"-csearch_path={schema}"}
+    )
+    try:
+        with engine.begin() as connection:
+            command.upgrade(migration_config(connection), "head")
+        with Session(engine) as db:
+            release, _, _, _ = draft(db, DAY - timedelta(days=10))
             publish(db, release)
             release_code = release.code
-        # This test uses separate connections, so commit catalog explicitly.
-    with Session(migrated_engine) as db:
-        user = User(registration_source="IMPORTED", tracking_start_date=DAY)
-        db.add(user)
-        db.commit()
-        user_id = user.id
-    data = StateWrite(
-        clientMutationId=uuid4(),
-        catalogRelease=release_code,
-        state="EXCLUDED",
-        expectedVersion=0,
-    )
+            user = User(registration_source="IMPORTED", tracking_start_date=DAY)
+            db.add(user)
+            db.commit()
+            user_id = user.id
+        data = StateWrite(
+            clientMutationId=uuid4(),
+            catalogRelease=release_code,
+            state="EXCLUDED",
+            expectedVersion=0,
+        )
 
-    def apply(payload):
-        with Session(migrated_engine) as db:
-            try:
-                result = service.write(
-                    db, db.get(User, user_id), DAY, "state", "test_set", payload
-                )
-                return result.model_dump(mode="json")
-            except HTTPException as exc:
-                return exc.status_code
+        def apply(payload):
+            with Session(engine) as db:
+                try:
+                    result = service.write(
+                        db, db.get(User, user_id), DAY, "state", "test_set", payload
+                    )
+                    return result.model_dump(mode="json")
+                except HTTPException as exc:
+                    return exc.status_code
 
-    try:
         with ThreadPoolExecutor(max_workers=2) as pool:
             results = list(pool.map(apply, [data, data]))
         assert results[0] == results[1] and isinstance(results[0], dict)
-        with Session(migrated_engine) as db:
-            assert (
-                db.scalar(
-                    select(func.count())
-                    .select_from(JournalDay)
-                    .where(JournalDay.user_id == user_id)
-                )
-                == 1
-            )
+        with Session(engine) as db:
+            assert db.scalar(select(func.count()).select_from(JournalDay)) == 1
+            assert db.scalar(select(func.count()).select_from(MutationReceipt)) == 1
     finally:
+        engine.dispose()
         with migrated_engine.begin() as connection:
-            ids = select(JournalDay.id).where(JournalDay.user_id == user_id)
-            connection.execute(
-                delete(MutationReceipt).where(MutationReceipt.user_id == user_id)
-            )
-            connection.execute(
-                delete(ActivityState).where(ActivityState.journal_day_id.in_(ids))
-            )
-            connection.execute(
-                delete(AdhkarCount).where(AdhkarCount.journal_day_id.in_(ids))
-            )
-            connection.execute(delete(JournalDay).where(JournalDay.user_id == user_id))
-            connection.execute(delete(User).where(User.id == user_id))
-        # Published catalog is immutable: remove through the tested migration roundtrip.
-        from conftest import migration_config
-
-        from alembic import command
-
-        with migrated_engine.begin() as connection:
-            command.downgrade(migration_config(connection), "base")
-            command.upgrade(migration_config(connection), "head")
+            connection.execute(text(f'DROP SCHEMA "{schema}" CASCADE'))
 
 
 def test_full_reference_day_has_34_cards_and_exact_74_69_denominators(

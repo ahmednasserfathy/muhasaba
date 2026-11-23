@@ -124,7 +124,9 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
     final selected = await showDatePicker(
       context: context,
       initialDate: DateTime.parse(date),
-      firstDate: DateTime.parse(day?.start ?? date),
+      firstDate: DateTime.parse(
+        day?.start ?? widget.account.trackingStartDate ?? '1900-01-01',
+      ),
       lastDate: DateTime.parse(repository.today),
     );
     if (selected != null && mounted) {

@@ -9,17 +9,20 @@ class Account {
     required this.email,
     required this.timezone,
     required this.emailVerified,
+    this.trackingStartDate,
   });
   final String id;
   final String email;
   final String timezone;
   final bool emailVerified;
+  final String? trackingStartDate;
 
   Map<String, dynamic> toJson() => {
     'id': id,
     'email': email,
     'timezone': timezone,
     'emailVerified': emailVerified,
+    if (trackingStartDate != null) 'trackingStartDate': trackingStartDate,
   };
 
   factory Account.fromJson(Map<String, dynamic> json) => Account(
@@ -27,6 +30,7 @@ class Account {
     email: json['email'] as String? ?? '',
     timezone: json['timezone'] as String,
     emailVerified: json['emailVerified'] as bool,
+    trackingStartDate: json['trackingStartDate'] as String?,
   );
 }
 
@@ -199,7 +203,9 @@ class AuthClient {
       }
       await _save(response.data!);
     } on DioException catch (error) {
-      if (error.response?.statusCode == 401) await store.clear();
+      if (error.response?.statusCode == 401 && epoch == _sessionEpoch) {
+        await store.clear();
+      }
       rethrow;
     }
   }
