@@ -2,7 +2,8 @@
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
 PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
-**PR-04 adds offline fasting plans and sourced regional Ramadan calendars.**
+**PR-05 adds weekly/monthly reports and protected bounded history restore.**
+See [`PR-05 contracts and checks`](codex/PR-05_REPORTS_SYNC.md).
 See [`PR-04 contracts and setup`](codex/PR-04_FASTING.md).
 See [`PR-03 scope, API and demo`](codex/PR-03_CORE_JOURNAL.md).
 
@@ -149,7 +150,7 @@ Android emulator at `http://10.0.2.2:8000/api/v1/`; start the Compose backend an
 apply migrations first. See [`mobile setup`](mobile/README.md) for device and
 release configuration. Open «المحاسبة اليوم» from the account page for cached daily tracking and sync.
 Published content is required; a guarded synthetic 34-card demo is documented in
-[PR-03](codex/PR-03_CORE_JOURNAL.md). Fasting plans also work without a published catalog; reports follow in PR-05.
+[PR-03](codex/PR-03_CORE_JOURNAL.md). Fasting plans also work without a published catalog; weekly/monthly reports are available from the account screen.
 
 ## Checks
 

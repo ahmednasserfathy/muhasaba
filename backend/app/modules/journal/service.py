@@ -61,6 +61,10 @@ def resolve(db, user, day_date):
 
 
 def day_view(db, user, day_date):
+    return day_view_with_score(db, user, day_date)[0]
+
+
+def day_view_with_score(db, user, day_date):
     day, release = resolve(db, user, day_date)
     states = (
         {}
@@ -151,7 +155,7 @@ def day_view(db, user, day_date):
             )
         )
     summary = score_day(tuple(scores))
-    return DayView(
+    view = DayView(
         date=day_date,
         today=today(user),
         tracking_start_date=user.tracking_start_date,
@@ -165,6 +169,8 @@ def day_view(db, user, day_date):
             percent=display_percent(summary.percent),
         ),
     )
+
+    return view, summary
 
 
 def conflict(code, canonical=None):

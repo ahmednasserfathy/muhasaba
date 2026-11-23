@@ -373,6 +373,124 @@ class JournalRepository {
     unawaited(sync());
   }
 
+  Future<int> restoreRange(String from, String to) async {
+    validateReportRange(from, to);
+    await sync();
+    final before = <String, String?>{};
+    for (final date in reportDates(from, to)) {
+      before[date] = (await read(date))?.encode();
+    }
+    final revision = _revision;
+    final response = await auth.authorized(
+      'GET',
+      'days?from=$from&to=$to',
+      account.id,
+    );
+    if (_disposed) return 0;
+    final restored = await _local(
+      () => db.transaction(() async {
+        if (revision != _revision) return 0;
+        var count = 0;
+        for (final value in response['days'] as List) {
+          final day = DayData(value as Map<String, dynamic>);
+          if (!before.containsKey(day.date) ||
+              (await db.pending(owner, day.date)).isNotEmpty ||
+              (await read(day.date))?.encode() != before[day.date]) {
+            continue;
+          }
+          await db.saveDay(owner, day);
+          count++;
+          if (day.json['fasting'] != null) {
+            await db.saveFasting(
+              owner,
+              day.json['fasting'] as Map<String, dynamic>,
+            );
+          }
+        }
+        return count;
+      }),
+    );
+    _notify();
+    return restored;
+  }
+
+  Future<Map<String, dynamic>> localReport(String from, String to) async {
+    validateReportRange(from, to);
+    final days = <Map<String, dynamic>>[];
+    final missing = <String>[];
+    var earned = Fraction(0);
+    var possible = 0;
+    for (final date in reportDates(from, to)) {
+      if (date.compareTo(today) > 0 ||
+          (account.trackingStartDate != null &&
+              date.compareTo(account.trackingStartDate!) < 0)) {
+        continue;
+      }
+      final day = await read(date);
+      if (day == null) {
+        missing.add(date);
+        continue;
+      }
+      earned = earned + day.recalculate();
+      possible += (day.json['summary'] as Map)['possible'] as int;
+      days.add({
+        'date': date,
+        'summary': day.json['summary'],
+        'fasting': day.json['fasting'],
+      });
+    }
+    return {
+      'days': days,
+      'unavailableDates': missing,
+      'local': true,
+      'summary': {
+        'earned': earned.decimal,
+        'possible': possible,
+        'percent': possible == 0
+            ? null
+            : earned.times(100).dividedBy(possible).rounded,
+      },
+    };
+  }
+
+  Future<Map<String, dynamic>> report(String from, String to) async {
+    validateReportRange(from, to);
+    await sync();
+    final revision = _revision;
+    if ((await db.pending(owner)).isNotEmpty) return localReport(from, to);
+    try {
+      final result = await auth.authorized(
+        'GET',
+        'reports/summary?from=$from&to=$to',
+        account.id,
+      );
+      if (revision != _revision || (await db.pending(owner)).isNotEmpty) {
+        return localReport(from, to);
+      }
+      return {...result, 'local': false};
+    } catch (_) {
+      return localReport(from, to);
+    }
+  }
+
+  static void validateReportRange(String from, String to) {
+    final length = DateTime.parse(
+      '${to}T00:00:00Z',
+    ).difference(DateTime.parse('${from}T00:00:00Z')).inDays;
+    if (length < 0 || length >= 31) {
+      throw const AuthFailure('اختر فترة من يوم إلى 31 يومًا.');
+    }
+  }
+
+  static Iterable<String> reportDates(String from, String to) sync* {
+    var date = DateTime.parse('${from}T00:00:00Z');
+    final end = DateTime.parse('${to}T00:00:00Z');
+    while (!date.isAfter(end)) {
+      yield date.toIso8601String().split('T').first;
+      date = date.add(const Duration(days: 1));
+    }
+  }
+
   String _error(Object error) {
     if (error is AuthFailure) return error.message;
     if (error is DioException) {

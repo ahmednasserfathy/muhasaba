@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'auth_controller.dart';
 import '../daily/daily_screen.dart';
+import '../reports/reports_screen.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -97,6 +98,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         ),
                       ),
                       child: const Text('المحاسبة اليوم'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => ReportsScreen(account: account),
+                        ),
+                      ),
+                      child: const Text('التقارير'),
                     ),
                     FilledButton(
                       onPressed: state.busy ? null : controller.logout,
