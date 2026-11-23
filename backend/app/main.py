@@ -10,12 +10,14 @@ from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.fasting.router import router as fasting_router
 from app.modules.journal.router import router as journal_router
+from app.modules.reports.router import router as reports_router
 
 app = FastAPI(title="Muhasaba", version="0.1.0")
 app.include_router(catalog_router)
 app.include_router(auth_router)
 app.include_router(journal_router)
 app.include_router(fasting_router)
+app.include_router(reports_router)
 
 
 @app.middleware("http")
@@ -26,6 +28,7 @@ async def private_account_responses(request: Request, call_next):
         or request.url.path == "/api/v1/me"
         or request.url.path.startswith("/api/v1/days")
         or request.url.path.startswith("/api/v1/fasting")
+        or request.url.path.startswith("/api/v1/reports")
     ):
         response.headers["Cache-Control"] = "no-store"
         response.headers["Pragma"] = "no-cache"

@@ -632,6 +632,122 @@
         }
       }
     },
+    "/api/v1/days": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Restore Days",
+        "operationId": "restore_days_api_v1_days_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RestoreView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/reports/summary": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Report Summary",
+        "operationId": "report_summary_api_v1_reports_summary_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "From"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date",
+              "title": "To"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReportView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -1383,6 +1499,140 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "ReportDay": {
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          },
+          "fasting": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/FastingView"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "date",
+          "summary",
+          "fasting"
+        ],
+        "title": "ReportDay"
+      },
+      "ReportView": {
+        "properties": {
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          },
+          "trackingStartDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Trackingstartdate"
+          },
+          "fromDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Fromdate"
+          },
+          "toDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Todate"
+          },
+          "unavailableDates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Unavailabledates"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/ReportDay"
+            },
+            "type": "array",
+            "title": "Days"
+          },
+          "summary": {
+            "$ref": "#/components/schemas/Summary"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "today",
+          "trackingStartDate",
+          "fromDate",
+          "toDate",
+          "unavailableDates",
+          "days",
+          "summary"
+        ],
+        "title": "ReportView"
+      },
+      "RestoreView": {
+        "properties": {
+          "today": {
+            "type": "string",
+            "format": "date",
+            "title": "Today"
+          },
+          "trackingStartDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Trackingstartdate"
+          },
+          "fromDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Fromdate"
+          },
+          "toDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Todate"
+          },
+          "unavailableDates": {
+            "items": {
+              "type": "string",
+              "format": "date"
+            },
+            "type": "array",
+            "title": "Unavailabledates"
+          },
+          "days": {
+            "items": {
+              "$ref": "#/components/schemas/DayView"
+            },
+            "type": "array",
+            "title": "Days"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "today",
+          "trackingStartDate",
+          "fromDate",
+          "toDate",
+          "unavailableDates",
+          "days"
+        ],
+        "title": "RestoreView"
       },
       "SetWrite": {
         "properties": {

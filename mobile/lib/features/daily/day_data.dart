@@ -55,7 +55,7 @@ class DayData {
     plan['eligible'] = fastingEligible(plan, plan['date'] as String);
   }
 
-  void recalculate() {
+  Fraction recalculate() {
     var earned = Fraction(0);
     var possible = 0;
     for (final card in cards) {
@@ -115,5 +115,6 @@ class DayData {
           ? null
           : earned.times(100).dividedBy(possible).rounded,
     };
+    return earned;
   }
 }

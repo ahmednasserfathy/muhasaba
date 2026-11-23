@@ -43,3 +43,9 @@ PR-04 adds fasting ADD (optional type), SKIP and DEFAULT. The date picker includ
 the next 365 days for planning only. Load each plan online once before offline
 editing; future plans need no published catalog. Drift schema v2 preserves v1
 cached days and pending writes. See `../codex/PR-04_FASTING.md`.
+
+PR-05 adds «التقارير» with weekly/monthly navigation, weighted period totals and
+explicit «حفظ الفترة دون اتصال» for up to 31 days. Restore preserves pending
+local work. Offline totals use cached days and clearly identify missing dates.
+Android device testing is deferred to the final release-readiness stage by user
+request; automated Flutter tests remain required for every PR.
