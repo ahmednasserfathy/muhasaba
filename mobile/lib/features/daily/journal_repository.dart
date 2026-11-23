@@ -46,6 +46,8 @@ class JournalRepository {
   }
 
   Future<DayData?> read(String date) => db.readDay(owner, date);
+  Future<Map<String, dynamic>?> readFasting(String date) =>
+      db.readFasting(owner, date);
   Future<int> pendingCount() async => (await db.pending(owner)).length;
   Future<bool> blocked(String date) async =>
       (await db.pending(owner, date)).any((r) => r.read<int>('blocked') == 1);
@@ -53,6 +55,10 @@ class JournalRepository {
   Future<void> load(String date) async {
     try {
       await sync();
+      if (date.compareTo(today) > 0) {
+        await loadFasting(date);
+        return;
+      }
       final revision = _revision;
       final response = await auth.authorized('GET', 'days/$date', account.id);
       if (_disposed) return;
@@ -63,12 +69,21 @@ class JournalRepository {
           if (revision == _revision &&
               (await db.pending(owner, date)).isEmpty) {
             await db.saveDay(owner, day);
+            if (day.json['fasting'] != null) {
+              await db.saveFasting(
+                owner,
+                day.json['fasting'] as Map<String, dynamic>,
+              );
+            }
           }
         }),
       );
       if ((await db.pending(owner)).isEmpty) message = null;
     } catch (error) {
       message = _error(error);
+      if (error is DioException && error.response?.statusCode == 404) {
+        await loadFasting(date);
+      }
     }
     _notify();
   }
@@ -106,7 +121,10 @@ class JournalRepository {
             throw StateError('Derived state');
           }
           if (card['kind'] == 'FASTING' &&
-              ![1, 4].contains(DateTime.parse(date).weekday) &&
+              !DayData.fastingEligible(
+                day.json['fasting'] as Map<String, dynamic>?,
+                date,
+              ) &&
               desired == 'COMPLETED') {
             throw const AuthFailure('الصيام غير مخطط لهذا اليوم.');
           }
@@ -200,7 +218,17 @@ class JournalRepository {
                 [owner, sequence],
               );
               if ((await db.pending(owner, row.read<String>('date'))).isEmpty) {
-                await db.saveDay(owner, DayData(response));
+                if (row.read<String>('route').endsWith('/fasting-plan')) {
+                  await db.saveFasting(owner, response);
+                } else {
+                  await db.saveDay(owner, DayData(response));
+                  if (response['fasting'] != null) {
+                    await db.saveFasting(
+                      owner,
+                      response['fasting'] as Map<String, dynamic>,
+                    );
+                  }
+                }
               }
             }),
           );
@@ -244,6 +272,100 @@ class JournalRepository {
           [owner, date],
         );
         await db.saveDay(owner, day);
+        if (day.json['fasting'] != null) {
+          await db.saveFasting(
+            owner,
+            day.json['fasting'] as Map<String, dynamic>,
+          );
+        }
+      }),
+    );
+    message = null;
+    _notify();
+    unawaited(sync());
+  }
+
+  Future<Map<String, dynamic>> serverFasting(String date) async {
+    final response = await auth.authorized(
+      'GET',
+      'fasting/calendar?from=$date&to=$date',
+      account.id,
+    );
+    return (response['days'] as List).single as Map<String, dynamic>;
+  }
+
+  Future<void> loadFasting(String date) async {
+    final revision = _revision;
+    try {
+      final plan = await serverFasting(date);
+      if (_disposed) return;
+      await _local(
+        () => db.transaction(() async {
+          if (revision == _revision &&
+              (await db.pending(owner, date)).isEmpty) {
+            await db.saveFasting(owner, plan);
+          }
+        }),
+      );
+    } catch (error) {
+      message = _error(error);
+    }
+    _notify();
+  }
+
+  Future<void> planFasting(String date, String mode, {String? fastType}) async {
+    await _local(
+      () => db.transaction(() async {
+        final plan = await readFasting(date);
+        if (plan == null) {
+          throw const AuthFailure('حمّل تقويم هذا اليوم أولًا.');
+        }
+        if (await blocked(date)) {
+          throw const AuthFailure('راجع تعارض اليوم أولًا.');
+        }
+        if (!['DEFAULT', 'ADD', 'SKIP'].contains(mode) ||
+            (mode != 'ADD' && fastType != null)) {
+          throw const AuthFailure('خطة صيام غير صالحة.');
+        }
+        final payload = {
+          'clientMutationId': const Uuid().v4(),
+          'expectedVersion': plan['rowVersion'],
+          'mode': mode,
+          'fastType': fastType,
+        };
+        plan['mode'] = mode;
+        plan['fastType'] = fastType;
+        plan['rowVersion'] = (plan['rowVersion'] as int) + 1;
+        DayData.recalculatePlan(plan);
+        _revision++;
+        await db.saveFasting(owner, plan);
+        await db.customStatement(
+          'INSERT INTO sync_outbox(owner,date,route,payload) VALUES(?,?,?,?)',
+          [owner, date, 'days/$date/fasting-plan', jsonEncode(payload)],
+        );
+      }),
+    );
+    _notify();
+    unawaited(sync());
+  }
+
+  Future<void> useServerFasting(Map<String, dynamic> plan) async {
+    if (_syncing) throw const AuthFailure('انتظر انتهاء المزامنة.');
+    final date = plan['date'] as String;
+    await _local(
+      () => db.transaction(() async {
+        final pending = await db.pending(owner, date);
+        if (pending.any(
+          (r) => !r.read<String>('route').endsWith('/fasting-plan'),
+        )) {
+          throw const AuthFailure('راجع سجل اليوم كاملًا لحفظ باقي التعديلات.');
+        }
+        _revision++;
+        await db.customStatement(
+          'DELETE FROM sync_outbox WHERE owner=? AND date=?',
+          [owner, date],
+        );
+        await db.saveFasting(owner, plan);
       }),
     );
     message = null;
