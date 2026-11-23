@@ -49,3 +49,11 @@ explicit «حفظ الفترة دون اتصال» for up to 31 days. Restore pr
 local work. Offline totals use cached days and clearly identify missing dates.
 Android device testing is deferred to the final release-readiness stage by user
 request; automated Flutter tests remain required for every PR.
+
+PR-06 adds «التذكيرات الاختيارية»: all categories default off, account-timezone
+wall times, quiet hours and generic private notifications. Only locally loaded
+today data and tomorrow fasting plans schedule one-shot reminders. Open daily to
+refresh; this is not a background sync service. Preferences remain on this device
+and Android permission is requested only through explicit settings interaction.
+Drift v3 preserves existing caches/outbox and adds preferences plus daily delivery
+reservations. See `../codex/PR-06_REMINDERS.md` for limits and final device QA.

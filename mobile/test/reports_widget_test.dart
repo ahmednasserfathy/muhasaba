@@ -6,7 +6,6 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:muhasaba/features/auth/auth_client.dart';
 import 'package:muhasaba/features/auth/auth_controller.dart';
-import 'package:muhasaba/features/daily/daily_screen.dart';
 import 'package:muhasaba/features/daily/journal_database.dart';
 import 'package:muhasaba/features/reports/reports_screen.dart';
 
