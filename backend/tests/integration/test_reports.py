@@ -105,7 +105,7 @@ def test_repeating_fractions_aggregate_before_rounding(
 
     from test_catalog import draft, publish
 
-    release, _, item, _ = draft(session, DAY - timedelta(days=1), points=3)
+    release, _, item, _ = draft(session, DAY - timedelta(days=1), points=1)
     item.target_count = 3
     publish(session, release)
     session.commit()
@@ -121,4 +121,4 @@ def test_repeating_fractions_aggregate_before_rounding(
         )
         assert response.status_code == 200
     result = client.get("/api/v1/reports/summary?from=2026-11-18&to=2026-11-19").json()
-    assert result["summary"] == {"earned": 2, "possible": 6, "percent": 33}
+    assert result["summary"] == {"earned": 2 / 3, "possible": 2, "percent": 33}

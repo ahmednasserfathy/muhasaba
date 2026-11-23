@@ -56,8 +56,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       report = null;
     });
     try {
+      var restored = 0;
       if (restore) {
-        await repository.restoreRange(iso(start), iso(end));
+        restored = await repository.restoreRange(iso(start), iso(end));
       }
       final value = await repository.report(iso(start), iso(end));
       if (mounted) {
@@ -65,7 +66,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           report = value;
           if (restore) {
             message =
-                'حُفظت الأيام المتاحة؛ التعديلات المعلقة محفوظة دون استبدال.';
+                'حُفظت $restored أيام؛ التعديلات المعلقة محفوظة دون استبدال.';
           }
         });
       }

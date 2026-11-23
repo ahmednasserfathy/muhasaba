@@ -61,7 +61,7 @@ void main() {
     await tester.tap(find.text('حفظ الفترة دون اتصال'));
     await settleJournal(tester);
     expect(restores, 1);
-    expect(find.textContaining('حُفظت الأيام المتاحة'), findsOneWidget);
+    expect(find.textContaining('حُفظت 0 أيام'), findsOneWidget);
     expect(tester.takeException(), isNull);
     await tester.pumpWidget(const SizedBox());
     await tester.runAsync(db.close);

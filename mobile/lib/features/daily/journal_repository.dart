@@ -373,7 +373,7 @@ class JournalRepository {
     unawaited(sync());
   }
 
-  Future<void> restoreRange(String from, String to) async {
+  Future<int> restoreRange(String from, String to) async {
     validateReportRange(from, to);
     await sync();
     final before = <String, String?>{};
@@ -386,10 +386,11 @@ class JournalRepository {
       'days?from=$from&to=$to',
       account.id,
     );
-    if (_disposed) return;
-    await _local(
+    if (_disposed) return 0;
+    final restored = await _local(
       () => db.transaction(() async {
-        if (revision != _revision) return;
+        if (revision != _revision) return 0;
+        var count = 0;
         for (final value in response['days'] as List) {
           final day = DayData(value as Map<String, dynamic>);
           if (!before.containsKey(day.date) ||
@@ -398,6 +399,7 @@ class JournalRepository {
             continue;
           }
           await db.saveDay(owner, day);
+          count++;
           if (day.json['fasting'] != null) {
             await db.saveFasting(
               owner,
@@ -405,9 +407,11 @@ class JournalRepository {
             );
           }
         }
+        return count;
       }),
     );
     _notify();
+    return restored;
   }
 
   Future<Map<String, dynamic>> localReport(String from, String to) async {
@@ -470,7 +474,9 @@ class JournalRepository {
   }
 
   static void validateReportRange(String from, String to) {
-    final length = DateTime.parse(to).difference(DateTime.parse(from)).inDays;
+    final length = DateTime.parse(
+      '${to}T00:00:00Z',
+    ).difference(DateTime.parse('${from}T00:00:00Z')).inDays;
     if (length < 0 || length >= 31) {
       throw const AuthFailure('اختر فترة من يوم إلى 31 يومًا.');
     }
