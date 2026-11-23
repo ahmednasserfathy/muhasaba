@@ -1,9 +1,13 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'auth_controller.dart';
 import '../daily/daily_screen.dart';
 import '../reports/reports_screen.dart';
+import '../reminders/reminder_service.dart';
+import '../reminders/reminder_screen.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -12,7 +16,58 @@ class AuthScreen extends ConsumerStatefulWidget {
   ConsumerState<AuthScreen> createState() => _AuthScreenState();
 }
 
-class _AuthScreenState extends ConsumerState<AuthScreen> {
+class _AuthScreenState extends ConsumerState<AuthScreen>
+    with WidgetsBindingObserver {
+  Timer? reminderTimer;
+  late final ReminderService reminders;
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    reminders = ref.read(reminderServiceProvider);
+    reminders.onOpen = (date) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final account = ref.read(authControllerProvider).account;
+        if (account == null || account.id != reminders.account?.id) return;
+        Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => DailyScreen(
+              account: account,
+              initialDate: date,
+              showRemaining: true,
+            ),
+          ),
+        );
+      });
+      WidgetsBinding.instance.ensureVisualUpdate();
+    };
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) unawaited(_activateReminders());
+    });
+    if (reminders.gateway.supported) {
+      reminderTimer = Timer.periodic(
+        const Duration(minutes: 1),
+        (_) => unawaited(reminders.refreshSafely()),
+      );
+    }
+  }
+
+  Future<void> _activateReminders() async {
+    try {
+      await ref
+          .read(reminderServiceProvider)
+          .activate(ref.read(authControllerProvider).account);
+    } catch (_) {
+      /* Reminder errors must never prevent authentication. */
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) unawaited(_activateReminders());
+  }
+
   final _form = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -22,6 +77,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    reminderTimer?.cancel();
+    reminders.onOpen = null;
     _email.dispose();
     _password.dispose();
     _timezone.dispose();
@@ -49,6 +107,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
   @override
   Widget build(BuildContext context) {
+    ref.listen(authControllerProvider, (previous, next) {
+      if (!next.busy) unawaited(_activateReminders());
+    });
     final state = ref.watch(authControllerProvider);
     final controller = ref.read(authControllerProvider.notifier);
     final account = state.account;
@@ -106,6 +167,14 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         ),
                       ),
                       child: const Text('التقارير'),
+                    ),
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => const ReminderScreen(),
+                        ),
+                      ),
+                      child: const Text('التذكيرات الاختيارية'),
                     ),
                     FilledButton(
                       onPressed: state.busy ? null : controller.logout,

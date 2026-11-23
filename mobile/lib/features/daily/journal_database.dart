@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:async';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 
 import 'package:drift/drift.dart';
@@ -7,7 +9,13 @@ import 'package:path_provider/path_provider.dart';
 
 import 'day_data.dart';
 
-// Two small SQL tables, managed by Drift migrations/transactions. The complete
+final journalDatabaseProvider = Provider<JournalDatabase>((ref) {
+  final db = JournalDatabase.open();
+  ref.onDispose(() => unawaited(db.close()));
+  return db;
+});
+
+// SQL tables managed by Drift migrations/transactions. The complete
 // day document includes the pinned catalog, counters and projected row versions.
 class JournalDatabase extends GeneratedDatabase {
   JournalDatabase(super.executor);
@@ -21,7 +29,14 @@ class JournalDatabase extends GeneratedDatabase {
   );
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
+  final changes = StreamController<void>.broadcast();
+  @override
+  Future<void> close() async {
+    await changes.close();
+    await super.close();
+  }
+
   @override
   Iterable<TableInfo<Table, Object?>> get allTables => const [];
   @override
@@ -30,6 +45,7 @@ class JournalDatabase extends GeneratedDatabase {
   MigrationStrategy get migration => MigrationStrategy(
     onCreate: (_) async {
       await _createFasting();
+      await _createReminders();
       await customStatement(
         'CREATE TABLE local_days (owner TEXT NOT NULL, date TEXT NOT NULL, document TEXT NOT NULL, PRIMARY KEY(owner, date))',
       );
@@ -42,8 +58,18 @@ class JournalDatabase extends GeneratedDatabase {
     },
     onUpgrade: (_, from, to) async {
       if (from < 2) await _createFasting();
+      if (from < 3) await _createReminders();
     },
   );
+
+  Future<void> _createReminders() async {
+    await customStatement(
+      'CREATE TABLE reminder_preferences (owner TEXT PRIMARY KEY, document TEXT NOT NULL)',
+    );
+    await customStatement(
+      'CREATE TABLE reminder_slots (owner TEXT NOT NULL, id INTEGER NOT NULL, fire_at TEXT NOT NULL, PRIMARY KEY(owner,id))',
+    );
+  }
 
   Future<void> _createFasting() => customStatement(
     'CREATE TABLE local_fasting (owner TEXT NOT NULL, date TEXT NOT NULL, document TEXT NOT NULL, PRIMARY KEY(owner,date))',

@@ -2,7 +2,8 @@
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
 PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
-**PR-05 adds weekly/monthly reports and protected bounded history restore.**
+**PR-06 adds opt-in local Android reminders and quiet hours.**
+See [`PR-06 behavior and limits`](codex/PR-06_REMINDERS.md).
 See [`PR-05 contracts and checks`](codex/PR-05_REPORTS_SYNC.md).
 See [`PR-04 contracts and setup`](codex/PR-04_FASTING.md).
 See [`PR-03 scope, API and demo`](codex/PR-03_CORE_JOURNAL.md).

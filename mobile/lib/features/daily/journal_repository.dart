@@ -37,7 +37,10 @@ class JournalRepository {
   }
 
   void _notify() {
-    if (!_disposed) changes.add(null);
+    if (!_disposed) {
+      changes.add(null);
+      db.changes.add(null);
+    }
   }
 
   Future<void> dispose() async {

@@ -9,14 +9,17 @@ import 'day_data.dart';
 import 'journal_database.dart';
 import 'journal_repository.dart';
 
-final journalDatabaseProvider = Provider<JournalDatabase>((ref) {
-  final db = JournalDatabase.open();
-  ref.onDispose(() => unawaited(db.close()));
-  return db;
-});
+export 'journal_database.dart' show journalDatabaseProvider;
 
 class DailyScreen extends ConsumerStatefulWidget {
-  const DailyScreen({super.key, required this.account});
+  const DailyScreen({
+    super.key,
+    required this.account,
+    this.initialDate,
+    this.showRemaining = false,
+  });
+  final String? initialDate;
+  final bool showRemaining;
   final Account account;
   @override
   ConsumerState<DailyScreen> createState() => _DailyScreenState();
@@ -26,6 +29,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
     with WidgetsBindingObserver {
   late final JournalRepository repository;
   late String date;
+  bool remainingOnly = false;
   DayData? day;
   Map<String, dynamic>? fasting;
   int pending = 0;
@@ -42,7 +46,8 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
       ref.read(authClientProvider),
       widget.account,
     );
-    date = repository.today;
+    date = widget.initialDate ?? repository.today;
+    remainingOnly = widget.showRemaining;
     WidgetsBinding.instance.addObserver(this);
     subscription = repository.changes.stream.listen((_) => unawaited(_read()));
     timer = Timer.periodic(
@@ -375,6 +380,15 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
   @override
   Widget build(BuildContext context) {
     final summary = day?.json['summary'] as Map<String, dynamic>?;
+    final visibleCards =
+        day?.cards
+            .where(
+              (c) =>
+                  !remainingOnly ||
+                  (c['eligible'] == true && c['status'] != 'COMPLETED'),
+            )
+            .toList() ??
+        <Map<String, dynamic>>[];
     return Scaffold(
       appBar: AppBar(
         title: const Text('المحاسبة اليوم'),
@@ -427,6 +441,11 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
                   ),
               ],
             ),
+            SwitchListTile(
+              title: const Text('عرض الأعمال المتبقية فقط'),
+              value: remainingOnly,
+              onChanged: (value) => setState(() => remainingOnly = value),
+            ),
             if (fasting != null) _fastingPanel(),
             if (date.compareTo(repository.today) > 0)
               const Text('تخطيط فقط — تسجيل الإنجاز متاح في يومه.'),
@@ -436,7 +455,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
               ),
             if (day != null)
               for (final category
-                  in day!.cards.map((c) => c['categoryCode']).toSet()) ...[
+                  in visibleCards.map((c) => c['categoryCode']).toSet()) ...[
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Text(
@@ -447,7 +466,7 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
                     style: Theme.of(context).textTheme.titleLarge,
                   ),
                 ),
-                for (final card in day!.cards.where(
+                for (final card in visibleCards.where(
                   (c) => c['categoryCode'] == category,
                 ))
                   Card(
