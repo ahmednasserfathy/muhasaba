@@ -125,7 +125,7 @@ jobs:
           done
           test -n "$apk_signer"
           "$apk_signer" verify --verbose --print-certs build/app/outputs/flutter-apk/app-release.apk > "$RUNNER_TEMP/apk-verification.txt"
-          rg -F 'CN=Muhasaba CI Only' "$RUNNER_TEMP/apk-verification.txt"
+          grep -F 'CN=Muhasaba CI Only' "$RUNNER_TEMP/apk-verification.txt"
       - name: Remove disposable signing material and APK
         if: always()
         run: rm -f "$RUNNER_TEMP/ci-only.p12" "$RUNNER_TEMP/apk-verification.txt" build/app/outputs/flutter-apk/app-release.apk
