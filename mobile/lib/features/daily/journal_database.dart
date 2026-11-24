@@ -29,7 +29,7 @@ class JournalDatabase extends GeneratedDatabase {
   );
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
   final changes = StreamController<void>.broadcast();
   @override
   Future<void> close() async {
@@ -46,6 +46,7 @@ class JournalDatabase extends GeneratedDatabase {
     onCreate: (_) async {
       await _createFasting();
       await _createReminders();
+      await _createGroups();
       await customStatement(
         'CREATE TABLE local_days (owner TEXT NOT NULL, date TEXT NOT NULL, document TEXT NOT NULL, PRIMARY KEY(owner, date))',
       );
@@ -59,7 +60,34 @@ class JournalDatabase extends GeneratedDatabase {
     onUpgrade: (_, from, to) async {
       if (from < 2) await _createFasting();
       if (from < 3) await _createReminders();
+      if (from < 4) await _createGroups();
     },
+  );
+
+  Future<void> _createGroups() => customStatement(
+    'CREATE TABLE local_group_plans (owner TEXT NOT NULL, code TEXT NOT NULL, date TEXT NOT NULL, document TEXT NOT NULL, PRIMARY KEY(owner,code,date))',
+  );
+  Future<Map<String, dynamic>?> readGroup(
+    String owner,
+    String code,
+    String date,
+  ) async {
+    final rows = await customSelect(
+      'SELECT document FROM local_group_plans WHERE owner=? AND code=? AND date=?',
+      variables: [Variable(owner), Variable(code), Variable(date)],
+    ).get();
+    return rows.isEmpty
+        ? null
+        : jsonDecode(rows.single.read<String>('document'))
+              as Map<String, dynamic>;
+  }
+
+  Future<void> saveGroup(
+    String owner,
+    Map<String, dynamic> plan,
+  ) => customStatement(
+    'INSERT INTO local_group_plans(owner,code,date,document) VALUES(?,?,?,?) ON CONFLICT(owner,code,date) DO UPDATE SET document=excluded.document',
+    [owner, plan['activityCode'], plan['date'], jsonEncode(plan)],
   );
 
   Future<void> _createReminders() async {

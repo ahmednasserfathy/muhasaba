@@ -67,7 +67,15 @@ class PlannedReminder {
 bool remainingCard(Map<String, dynamic> card) =>
     card['eligible'] == true &&
     card['status'] != 'COMPLETED' &&
-    (card['possiblePoints'] as num) > 0;
+    (card['possiblePoints'] as num) > 0 &&
+    (card['kind'] != 'ADHKAR_SET' ||
+        DayData.items(card).any(
+          (i) =>
+              i['sourceType'] == 'OFFICIAL' &&
+              i['isScoreEligible'] == true &&
+              i['hidden'] != true &&
+              (i['completedCount'] as int) < (i['targetCount'] as int),
+        ));
 
 List<PlannedReminder> planReminders({
   required ReminderPreferences preferences,

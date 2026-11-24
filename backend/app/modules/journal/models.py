@@ -31,6 +31,7 @@ class JournalDay(Base):
     catalog_release_id: Mapped[UUID] = mapped_column(
         ForeignKey("catalog_releases.id", ondelete="RESTRICT")
     )
+    group_plans: Mapped[dict | None] = mapped_column(JSONB)
     fasting_baseline: Mapped[dict | None] = mapped_column(JSONB)
     timezone_at_creation: Mapped[str] = mapped_column(String(64))
     created_at: Mapped[datetime] = mapped_column(
@@ -75,7 +76,19 @@ class AdhkarCount(Base):
             "completed_count BETWEEN 0 AND target_count_snapshot", name="snapshot_count"
         ),
         CheckConstraint("row_version >= 0", name="count_version"),
-        CheckConstraint("source_type = 'OFFICIAL'", name="snapshot_source"),
+        CheckConstraint(
+            "(source_type = 'OFFICIAL' AND adhkar_item_id IS NOT NULL "
+            "AND custom_item_id IS NULL) OR (source_type = 'PERSONAL' "
+            "AND adhkar_item_id IS NULL AND custom_item_id IS NOT NULL "
+            "AND NOT is_score_eligible_snapshot)",
+            name="snapshot_source",
+        ),
+        UniqueConstraint(
+            "journal_day_id",
+            "activity_id",
+            "custom_item_id",
+            name="journal_day_custom_item",
+        ),
     )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
     journal_day_id: Mapped[UUID] = mapped_column(
@@ -84,7 +97,10 @@ class AdhkarCount(Base):
     activity_id: Mapped[UUID] = mapped_column(
         ForeignKey("activities.id", ondelete="RESTRICT")
     )
-    adhkar_item_id: Mapped[UUID] = mapped_column(
+    custom_item_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("user_custom_items.id", ondelete="RESTRICT")
+    )
+    adhkar_item_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("adhkar_items.id", ondelete="RESTRICT")
     )
     item_code_snapshot: Mapped[str] = mapped_column(String(90))

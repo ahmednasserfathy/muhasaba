@@ -7,6 +7,7 @@ from sqlalchemy import (
     Date,
     DateTime,
     ForeignKey,
+    Integer,
     SmallInteger,
     String,
     Text,
@@ -37,6 +38,7 @@ class CatalogRelease(Base):
         ),
     )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    row_version: Mapped[int] = mapped_column(Integer, server_default="1")
     code: Mapped[str] = mapped_column(String(50), unique=True)
     effective_from: Mapped[date] = mapped_column(Date, unique=True)
     status: Mapped[str] = mapped_column(String(12), server_default="DRAFT")
@@ -99,6 +101,11 @@ class LibraryEntry(Base):
         ),
     )
     id: Mapped[UUID] = mapped_column(Uuid, primary_key=True, default=uuid4)
+    row_version: Mapped[int] = mapped_column(Integer, server_default="1")
+    reviewed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reviewed_by: Mapped[UUID | None] = mapped_column(
+        ForeignKey("users.id", ondelete="RESTRICT")
+    )
     code: Mapped[str] = mapped_column(String(100), unique=True)
     type: Mapped[str] = mapped_column(String(8))
     title_ar: Mapped[str | None] = mapped_column(Text)

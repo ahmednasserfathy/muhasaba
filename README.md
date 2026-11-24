@@ -2,7 +2,8 @@
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
 PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
-**PR-06 adds opt-in local Android reminders and quiet hours.**
+**PR-06b adds official library APIs and private group customization.**
+See [`PR-06b behavior, API and limits`](codex/PR-06b_LIBRARY_PERSONAL.md).
 See [`PR-06 behavior and limits`](codex/PR-06_REMINDERS.md).
 See [`PR-05 contracts and checks`](codex/PR-05_REPORTS_SYNC.md).
 See [`PR-04 contracts and setup`](codex/PR-04_FASTING.md).
@@ -108,7 +109,8 @@ Use URL-safe local `APP_DB_PASSWORD` values: Compose interpolates that value int
 and immutability guards) and `0002` (eight categories, 34 draft reference cards), then `0003` (users,
 sessions, external identity placeholders, settings and library author FK), then
 `0004` (daily journals, official snapshots and mutation receipts), then
-`0005` (fasting overrides, regional calendars and preserved daily baselines).
+`0005` (fasting overrides, regional calendars and preserved daily baselines), then
+`0006` (private dated plans/count snapshots and editorial versions).
 There are no seeded religious texts or published releases.
 
 `GET /api/v1/catalog?date=2026-11-19` intentionally returns 404 on a fresh database.
