@@ -230,7 +230,9 @@ def edit_item(db, user, data, key, operation):
         row is None or row.user_id != user.id or row.activity_code != data.activity_code
     ):
         raise HTTPException(404, "Unknown personal item")
-    plan = definition(db, user, data.activity_code, data.effective_from)
+    plan = view(db, user, data.activity_code, data.effective_from).model_dump(
+        mode="json", by_alias=True
+    )
     items = list(plan["customItems"])
     index = next((n for n, item in enumerate(items) if item["id"] == str(key)), None)
     if operation == "delete":

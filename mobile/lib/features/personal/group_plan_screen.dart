@@ -54,8 +54,9 @@ class _GroupPlanScreenState extends State<GroupPlanScreen> {
         });
       }
     } catch (_) {
-      if (mounted)
+      if (mounted) {
         setState(() => message = 'تعذر قراءة التخصيص المحفوظ. حاول مرة أخرى.');
+      }
     } finally {
       if (mounted) setState(() => busy = false);
     }
