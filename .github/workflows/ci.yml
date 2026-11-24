@@ -34,6 +34,7 @@ jobs:
           curl --fail http://127.0.0.1:8000/health
           docker compose --env-file .env -f infra/compose.yml exec -T api alembic upgrade head
           docker compose --env-file .env -f infra/compose.yml exec -T api alembic current
+          curl --fail http://127.0.0.1:8000/ready
       - name: Create isolated integration database
         run: docker compose --env-file .env -f infra/compose.yml exec -T db createdb -U postgres -O muhasaba muhasaba_test
       - name: PostgreSQL integration tests
@@ -41,6 +42,24 @@ jobs:
         env:
           TEST_DATABASE_URL: postgresql+psycopg://muhasaba:local_app_only@127.0.0.1:5432/muhasaba_test
         run: uv run --locked pytest tests/integration -ra
+      - name: Backup and restore drill with synthetic journal data
+        run: |
+          docker compose --env-file .env -f infra/compose.yml exec -T db createdb -U postgres -O muhasaba recovery_source_test
+          export DATABASE_URL='postgresql+psycopg://muhasaba:local_app_only@127.0.0.1:5432/recovery_source_test'
+          (cd backend && uv run --locked alembic upgrade head)
+          (cd backend && uv run --locked python -m scripts.recovery_probe seed "$RUNNER_TEMP/recovery.json")
+          infra/scripts/backup.sh "$RUNNER_TEMP/recovery.dump" recovery_source_test
+          if infra/scripts/backup.sh "$RUNNER_TEMP/recovery.dump" recovery_source_test; then
+            echo 'Backup unexpectedly overwrote an archive'; exit 1
+          fi
+          if infra/scripts/restore-check.sh "$RUNNER_TEMP/recovery.dump" muhasaba; then
+            echo 'Restore unexpectedly accepted a live database name'; exit 1
+          fi
+          infra/scripts/restore-check.sh "$RUNNER_TEMP/recovery.dump" recovery_restore_test
+          export DATABASE_URL='postgresql+psycopg://muhasaba:local_app_only@127.0.0.1:5432/recovery_restore_test'
+          (cd backend && uv run --locked alembic current)
+          (cd backend && uv run --locked python -m scripts.recovery_probe verify "$RUNNER_TEMP/recovery.json")
+          rm "$RUNNER_TEMP/recovery.dump" "$RUNNER_TEMP/recovery.json"
       - name: Stack logs
         if: failure()
         run: docker compose --env-file .env -f infra/compose.yml logs
@@ -64,3 +83,49 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed lib test
       - run: flutter analyze
       - run: flutter test
+
+  android-build:
+    needs: [backend, mobile]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.38.9"
+          channel: stable
+          cache: true
+      - run: flutter pub get --enforce-lockfile
+      - name: Generate disposable CI signing key
+        run: |
+          umask 077
+          export ANDROID_KEYSTORE_PATH="$RUNNER_TEMP/ci-only.p12"
+          export ANDROID_KEYSTORE_PASSWORD="$(openssl rand -hex 24)"
+          export ANDROID_KEY_PASSWORD="$ANDROID_KEYSTORE_PASSWORD"
+          export ANDROID_KEY_ALIAS=ci-only
+          echo "::add-mask::$ANDROID_KEYSTORE_PASSWORD"
+          keytool -genkeypair -keystore "$ANDROID_KEYSTORE_PATH" -storetype PKCS12 -alias "$ANDROID_KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 2 -dname 'CN=Muhasaba CI Only' -storepass:env ANDROID_KEYSTORE_PASSWORD -keypass:env ANDROID_KEY_PASSWORD
+          echo "ANDROID_KEYSTORE_PATH=$ANDROID_KEYSTORE_PATH" >> "$GITHUB_ENV"
+          echo "ANDROID_KEYSTORE_PASSWORD=$ANDROID_KEYSTORE_PASSWORD" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_PASSWORD=$ANDROID_KEY_PASSWORD" >> "$GITHUB_ENV"
+          echo "ANDROID_KEY_ALIAS=$ANDROID_KEY_ALIAS" >> "$GITHUB_ENV"
+      - name: Compile release and verify disposable signature
+        run: |
+          flutter build apk --release --dart-define=API_BASE_URL=https://staging.invalid/api/v1/
+          apk_signer=''
+          for candidate in "$ANDROID_HOME"/build-tools/*/apksigner; do
+            if [[ -x "$candidate" ]]; then apk_signer="$candidate"; fi
+          done
+          test -n "$apk_signer"
+          "$apk_signer" verify --verbose --print-certs build/app/outputs/flutter-apk/app-release.apk > "$RUNNER_TEMP/apk-verification.txt"
+          rg -F 'CN=Muhasaba CI Only' "$RUNNER_TEMP/apk-verification.txt"
+      - name: Remove disposable signing material and APK
+        if: always()
+        run: rm -f "$RUNNER_TEMP/ci-only.p12" "$RUNNER_TEMP/apk-verification.txt" build/app/outputs/flutter-apk/app-release.apk

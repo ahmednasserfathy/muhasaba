@@ -13,7 +13,13 @@ class Base(DeclarativeBase):
 
 @lru_cache
 def get_engine():
-    return create_engine(os.environ["DATABASE_URL"], pool_pre_ping=True)
+    return create_engine(
+        os.environ["DATABASE_URL"],
+        pool_pre_ping=True,
+        hide_parameters=True,
+        connect_args={"connect_timeout": 3},
+        pool_timeout=3,
+    )
 
 
 def get_session():
