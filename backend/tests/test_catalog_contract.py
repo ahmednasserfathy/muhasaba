@@ -13,10 +13,9 @@ def test_catalog_without_database_is_unavailable_not_published(monkeypatch):
         assert client.get("/health").status_code == 200
 
 
-def test_no_editorial_write_routes_exposed():
+def test_public_catalog_is_read_only():
     with TestClient(app) as client:
         assert client.post("/api/v1/catalog", json={}).status_code == 405
-        assert client.post("/api/v1/admin/library-items", json={}).status_code == 404
 
 
 def test_openapi_matches_reviewed_contract():

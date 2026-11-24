@@ -8,8 +8,10 @@ from pydantic import BaseModel
 
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
+from app.modules.editorial.router import router as editorial_router
 from app.modules.fasting.router import router as fasting_router
 from app.modules.journal.router import router as journal_router
+from app.modules.personal.router import router as personal_router
 from app.modules.reports.router import router as reports_router
 
 app = FastAPI(title="Muhasaba", version="0.1.0")
@@ -18,6 +20,8 @@ app.include_router(auth_router)
 app.include_router(journal_router)
 app.include_router(fasting_router)
 app.include_router(reports_router)
+app.include_router(personal_router)
+app.include_router(editorial_router)
 
 
 @app.middleware("http")
@@ -26,6 +30,8 @@ async def private_account_responses(request: Request, call_next):
     if (
         request.url.path.startswith("/api/v1/auth/")
         or request.url.path == "/api/v1/me"
+        or request.url.path.startswith("/api/v1/me/")
+        or request.url.path.startswith("/api/v1/admin/")
         or request.url.path.startswith("/api/v1/days")
         or request.url.path.startswith("/api/v1/fasting")
         or request.url.path.startswith("/api/v1/reports")
@@ -37,7 +43,7 @@ async def private_account_responses(request: Request, call_next):
 
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, exc: RequestValidationError):
-    if request.url.path.startswith("/api/v1/auth/"):
+    if request.url.path.startswith(("/api/v1/auth/", "/api/v1/me/", "/api/v1/admin/")):
         # Never echo submitted passwords/tokens in validation responses.
         errors = [
             {key: error[key] for key in ("loc", "msg", "type")}

@@ -28,6 +28,7 @@ class StateWrite(Mutation):
 
 
 class CountWrite(Mutation):
+    expected_plan_version: Version = 0
     expected_version: Version
     completed_count: int = Field(strict=True, ge=0, le=1000)
 
@@ -44,14 +45,20 @@ class ItemView(JournalModel):
     target_count: int
     completed_count: int
     row_version: int
-    source_type: Literal["OFFICIAL"] = "OFFICIAL"
+    source_type: Literal["OFFICIAL", "PERSONAL"] = "OFFICIAL"
+    hidden: bool = False
+    sort_order: int = 0
     is_score_eligible: bool
-    source_name: str
-    source_url: str
-    license_notes: str
+    source_name: str = ""
+    source_url: str = ""
+    license_notes: str = ""
 
 
 class CardView(JournalModel):
+    plan_version: int = 0
+    hidden_official_incomplete: int = 0
+    personal_completed: int = 0
+    personal_total: int = 0
     code: str
     category_code: str
     category_title_ar: str

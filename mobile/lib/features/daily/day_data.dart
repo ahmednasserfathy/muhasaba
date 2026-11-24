@@ -39,6 +39,45 @@ class DayData {
   static List<Map<String, dynamic>> items(Map<String, dynamic> card) =>
       (card['items'] as List).cast<Map<String, dynamic>>();
 
+  // Only called for a newly saved, not-yet-started group's effective day.
+  void applyGroup(Map<String, dynamic> plan) {
+    final group = card(plan['activityCode'] as String);
+    final hidden = plan['hiddenDefaultCodes'] as List;
+    final order = plan['officialOrder'] as List;
+    final official = items(
+      group,
+    ).where((i) => i['sourceType'] == 'OFFICIAL').toList();
+    for (var index = 0; index < official.length; index++) {
+      final item = official[index];
+      item['hidden'] = hidden.contains(item['code']);
+      final rank = order.indexOf(item['code']);
+      item['sortOrder'] = rank < 0 ? order.length + index : rank;
+    }
+    official.sort(
+      (a, b) => (a['sortOrder'] as int).compareTo(b['sortOrder'] as int),
+    );
+    group['planVersion'] = plan['rowVersion'];
+    group['items'] = <Map<String, dynamic>>[
+      ...official,
+      for (final item in plan['customItems'] as List)
+        {
+          'itemKey': 'personal:${item['id']}',
+          'code': item['id'],
+          'textAr': item['textAr'],
+          'targetCount': item['targetCount'],
+          'completedCount': 0,
+          'rowVersion': 0,
+          'sourceType': 'PERSONAL',
+          'isScoreEligible': false,
+          'hidden': false,
+          'sourceName': '',
+          'sourceUrl': '',
+          'licenseNotes': '',
+        },
+    ];
+    recalculate();
+  }
+
   static bool fastingEligible(Map<String, dynamic>? plan, String date) {
     if (plan == null) return [1, 4].contains(DateTime.parse(date).weekday);
     if (plan['mode'] == 'SKIP') return false;
@@ -98,6 +137,17 @@ class DayData {
       card['possiblePoints'] = eligible ? weight : 0;
       card['officialTotal'] = official.length;
       card['officialCompleted'] = official
+          .where((i) => i['completedCount'] == i['targetCount'])
+          .length;
+      card['hiddenOfficialIncomplete'] = official
+          .where(
+            (i) =>
+                i['hidden'] == true && i['completedCount'] != i['targetCount'],
+          )
+          .length;
+      final personal = items(card).where((i) => i['sourceType'] == 'PERSONAL');
+      card['personalTotal'] = personal.length;
+      card['personalCompleted'] = personal
           .where((i) => i['completedCount'] == i['targetCount'])
           .length;
       card['status'] = !eligible

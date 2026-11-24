@@ -1,6 +1,7 @@
 import hashlib
 import json
 from datetime import datetime
+from uuid import UUID
 from zoneinfo import ZoneInfo
 
 from fastapi import HTTPException
@@ -23,6 +24,7 @@ from app.modules.journal.models import (
     MutationReceipt,
 )
 from app.modules.journal.schemas import CardView, DayView, ItemView, Summary
+from app.modules.personal import service as personal_service
 
 
 def today(user):
@@ -80,13 +82,14 @@ def day_view_with_score(db, user, day_date):
         {}
         if day is None
         else {
-            c.adhkar_item_id: c
+            (c.source_type, c.adhkar_item_id or c.custom_item_id): c
             for c in db.scalars(
                 select(AdhkarCount).where(AdhkarCount.journal_day_id == day.id)
             )
         }
     )
     fasting = fasting_service.view(db, user, day_date, day)
+    plans = personal_service.for_day(db, user, day_date, day, release)
     cards, scores = [], []
     for a in sorted(
         release.activities, key=lambda a: (a.category.sort_order, a.sort_order)
@@ -94,13 +97,19 @@ def day_view_with_score(db, user, day_date):
         if not a.is_active:
             continue
         state = states.get(a.id)
+        plan = plans.get(a.code, {})
+        order = plan.get("officialOrder", [])
         items = []
         for i in a.items:
-            c = counts.get(i.id)
+            c = counts.get(("OFFICIAL", i.id))
             items.append(
                 ItemView(
                     item_key=f"official:{a.code}:{i.code}",
                     code=i.code,
+                    hidden=i.code in plan.get("hiddenDefaultCodes", []),
+                    sort_order=order.index(i.code)
+                    if i.code in order
+                    else len(order) + i.sort_order,
                     text_ar=c.text_ar_snapshot if c else i.text_ar,
                     target_count=c.target_count_snapshot if c else i.target_count,
                     completed_count=c.completed_count if c else 0,
@@ -113,6 +122,24 @@ def day_view_with_score(db, user, day_date):
                     license_notes=i.license_notes,
                 )
             )
+        for index, custom in enumerate(plan.get("customItems", [])):
+            c = counts.get(("PERSONAL", UUID(custom["id"])))
+            items.append(
+                ItemView(
+                    item_key=f"personal:{custom['id']}",
+                    code=custom["id"],
+                    text_ar=c.text_ar_snapshot if c else custom["textAr"],
+                    target_count=c.target_count_snapshot
+                    if c
+                    else custom["targetCount"],
+                    completed_count=c.completed_count if c else 0,
+                    row_version=c.row_version if c else 0,
+                    source_type="PERSONAL",
+                    is_score_eligible=False,
+                    sort_order=10000 + index,
+                )
+            )
+        items.sort(key=lambda i: i.sort_order)
         eligible = (a.kind != "FASTING" or fasting.eligible) and (
             state is None or state.state != "EXCLUDED"
         )
@@ -127,6 +154,7 @@ def day_view_with_score(db, user, day_date):
                     i.target_count,
                     i.completed_count,
                     is_score_eligible=i.is_score_eligible,
+                    source_type=i.source_type,
                 )
                 for i in items
             ),
@@ -135,6 +163,18 @@ def day_view_with_score(db, user, day_date):
         official = [i for i in items if i.is_score_eligible]
         cards.append(
             CardView(
+                plan_version=plan.get("rowVersion", 0),
+                hidden_official_incomplete=sum(
+                    i.hidden
+                    and i.is_score_eligible
+                    and i.completed_count < i.target_count
+                    for i in items
+                ),
+                personal_total=sum(i.source_type == "PERSONAL" for i in items),
+                personal_completed=sum(
+                    i.source_type == "PERSONAL" and i.completed_count == i.target_count
+                    for i in items
+                ),
                 code=a.code,
                 category_code=a.category.code,
                 category_title_ar=a.category.title_ar,
@@ -196,8 +236,12 @@ def _write(db, user, day_date, kind, key, data):
     # One lock per account serializes first-day creation, receipts and all bulk rows.
     # No process-local lock: separate workers/connections share PostgreSQL ordering.
     db.scalar(select(User).where(User.id == user.id).with_for_update())
+    body = data.model_dump(mode="json")
+    # Keep official counter receipt hashes compatible with pre-personal clients.
+    if kind == "count" and key.startswith("official:"):
+        body.pop("expected_plan_version", None)
     payload = json.dumps(
-        [str(day_date), kind, key, data.model_dump(mode="json")],
+        [str(day_date), kind, key, body],
         sort_keys=True,
         separators=(",", ":"),
     )
@@ -218,11 +262,28 @@ def _write(db, user, day_date, kind, key, data):
         )
     activity_code = key
     item_code = None
+    custom_id = None
     if kind == "count":
         parts = key.split(":")
-        if len(parts) != 3 or parts[0] != "official":
-            raise HTTPException(404, "Unknown official item")
-        _, activity_code, item_code = parts
+        if len(parts) == 2 and parts[0] == "personal":
+            plans = personal_service.for_day(db, user, day_date, day, release)
+            activity_code = next(
+                (
+                    code
+                    for code, plan in plans.items()
+                    if any(i["id"] == parts[1] for i in plan.get("customItems", []))
+                ),
+                None,
+            )
+            if activity_code is None:
+                raise HTTPException(404, "Unknown personal item")
+            if data.expected_plan_version != plans[activity_code].get("rowVersion", 0):
+                conflict("PLAN_CHANGED")
+            custom_id = item_code = parts[1]
+        elif len(parts) == 3 and parts[0] == "official":
+            _, activity_code, item_code = parts
+        else:
+            raise HTTPException(404, "Unknown item")
     activity = next(
         (a for a in release.activities if a.code == activity_code and a.is_active), None
     )
@@ -239,7 +300,11 @@ def _write(db, user, day_date, kind, key, data):
             raise HTTPException(422, "Fasting is not planned for this date")
     elif activity.kind != "ADHKAR_SET":
         raise HTTPException(422, "Only adhkar sets have counters")
-    if kind == "count" and not any(i.code == item_code for i in activity.items):
+    if (
+        kind == "count"
+        and not custom_id
+        and not any(i.code == item_code for i in activity.items)
+    ):
         raise HTTPException(404, "Unknown item in this activity")
     # First successful edit pins the entire official day, including zero counters.
     if day is None:
@@ -249,11 +314,15 @@ def _write(db, user, day_date, kind, key, data):
             catalog_release_id=release.id,
             timezone_at_creation=user.timezone,
             fasting_baseline=fasting_service.baseline(db, user, day_date),
+            group_plans=personal_service.for_day(db, user, day_date, None, release),
         )
         db.add(day)
         db.flush()
         for a in release.activities:
             if a.is_active:
+                personal_service.snapshot_counts(
+                    db, day, a, (day.group_plans or {}).get(a.code, {})
+                )
                 for i in a.items:
                     db.add(
                         AdhkarCount(
@@ -295,7 +364,12 @@ def _write(db, user, day_date, kind, key, data):
             )
         )
         if kind == "count":
-            row = next(c for c in rows if c.item_code_snapshot == item_code)
+            row = next(
+                c
+                for c in rows
+                if c.item_code_snapshot == item_code
+                and c.source_type == ("PERSONAL" if custom_id else "OFFICIAL")
+            )
             if data.completed_count > row.target_count_snapshot:
                 raise HTTPException(422, "Count exceeds target")
             if data.expected_version != row.row_version:
@@ -311,6 +385,7 @@ def _write(db, user, day_date, kind, key, data):
                 row.row_version + 1,
             )
         else:
+            rows = [c for c in rows if c.source_type == "OFFICIAL"]
             expected = {c.item_code_snapshot: c.row_version for c in rows}
             if data.expected_versions != expected:
                 conflict("CONFLICT", expected)

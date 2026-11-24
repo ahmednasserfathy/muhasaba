@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../auth/auth_client.dart';
 import '../auth/auth_controller.dart';
+import '../personal/group_plan_screen.dart';
 import 'day_data.dart';
 import 'journal_database.dart';
 import 'journal_repository.dart';
@@ -245,131 +246,168 @@ class _DailyScreenState extends ConsumerState<DailyScreen>
   }
 
   void _details(String code) {
+    var showHidden = false;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       useSafeArea: true,
-      builder: (context) => StreamBuilder<void>(
-        stream: repository.changes.stream,
-        builder: (context, _) => FutureBuilder<DayData?>(
-          future: repository.read(date),
-          builder: (context, snapshot) {
-            final card = snapshot.data?.card(code) ?? day!.card(code);
-            return DraggableScrollableSheet(
-              expand: false,
-              initialChildSize: 0.8,
-              minChildSize: 0.4,
-              builder: (context, scroll) => ListView(
-                controller: scroll,
-                padding: const EdgeInsets.all(20),
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          card['titleAr'] as String,
-                          style: Theme.of(context).textTheme.titleLarge,
+      builder: (context) => StatefulBuilder(
+        builder: (context, update) => StreamBuilder<void>(
+          stream: repository.changes.stream,
+          builder: (context, _) => FutureBuilder<DayData?>(
+            future: repository.read(date),
+            builder: (context, snapshot) {
+              final card = snapshot.data?.card(code) ?? day!.card(code);
+              return DraggableScrollableSheet(
+                expand: false,
+                initialChildSize: 0.8,
+                minChildSize: 0.4,
+                builder: (context, scroll) => ListView(
+                  controller: scroll,
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            card['titleAr'] as String,
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        tooltip: 'إغلاق',
-                        onPressed: () => Navigator.pop(context),
-                        icon: const Icon(Icons.close),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '${_points(card['earnedPoints'])} / ${card['possiblePoints']} نقطة — ${card['officialCompleted']}/${card['officialTotal']} مكتمل',
-                  ),
-                  const Text(
-                    'كل خطوة تُحسب. يمكنك التراجع أو تقليل العدد في أي وقت.',
-                  ),
-                  Wrap(
-                    spacing: 8,
-                    children: [
-                      TextButton(
-                        onPressed: blocked
-                            ? null
-                            : () => _edit('set', code, action: 'COMPLETE_ALL'),
-                        child: const Text('إكمال الكل'),
-                      ),
-                      TextButton(
-                        onPressed: blocked
-                            ? null
-                            : () => _edit('set', code, action: 'CLEAR_ALL'),
-                        child: const Text('مسح الكل'),
-                      ),
-                    ],
-                  ),
-                  for (final item in DayData.items(card))
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(12),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              item['textAr'] as String,
-                              textDirection: TextDirection.rtl,
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            Text(
-                              item['isScoreEligible'] == true
-                                  ? 'رسمي — ضمن نقاط الكارت'
-                                  : 'رسمي — للمتابعة فقط',
-                            ),
-                            Text('المصدر: ${item['sourceName']}'),
-                            SelectableText(item['sourceUrl'] as String),
-                            Text(item['licenseNotes'] as String),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                IconButton(
-                                  key: Key('minus-${item['code']}'),
-                                  tooltip: 'تقليل العدد',
-                                  onPressed: blocked
-                                      ? null
-                                      : () => _edit(
-                                          'count',
-                                          item['itemKey'] as String,
-                                          delta: -1,
-                                        ),
-                                  icon: const Icon(Icons.remove),
-                                ),
-                                TextButton(
-                                  key: Key('count-${item['code']}'),
-                                  onPressed: blocked || item['targetCount'] != 1
-                                      ? null
-                                      : () => _edit(
-                                          'count',
-                                          item['itemKey'] as String,
-                                        ),
-                                  child: Text(
-                                    '${item['completedCount']}/${item['targetCount']}',
-                                  ),
-                                ),
-                                IconButton(
-                                  key: Key('plus-${item['code']}'),
-                                  tooltip: 'زيادة العدد',
-                                  onPressed: blocked
-                                      ? null
-                                      : () => _edit(
-                                          'count',
-                                          item['itemKey'] as String,
-                                          delta: 1,
-                                        ),
-                                  icon: const Icon(Icons.add),
-                                ),
-                              ],
-                            ),
-                          ],
+                        IconButton(
+                          tooltip: 'إغلاق',
+                          onPressed: () => Navigator.pop(context),
+                          icon: const Icon(Icons.close),
                         ),
-                      ),
+                      ],
                     ),
-                ],
-              ),
-            );
-          },
+                    Text(
+                      '${_points(card['earnedPoints'])} / ${card['possiblePoints']} نقطة — ${card['officialCompleted']}/${card['officialTotal']} مكتمل',
+                    ),
+                    const Text(
+                      'كل خطوة تُحسب. يمكنك التراجع أو تقليل العدد في أي وقت.',
+                    ),
+                    Wrap(
+                      spacing: 8,
+                      children: [
+                        TextButton(
+                          onPressed: blocked
+                              ? null
+                              : () =>
+                                    _edit('set', code, action: 'COMPLETE_ALL'),
+                          child: const Text('إكمال الرسمي كله'),
+                        ),
+                        TextButton(
+                          onPressed: blocked
+                              ? null
+                              : () => _edit('set', code, action: 'CLEAR_ALL'),
+                          child: const Text('مسح الرسمي كله'),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'الشخصي: ${card['personalCompleted'] ?? 0}/${card['personalTotal'] ?? 0} — بدون نقاط',
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pop(context);
+                        Navigator.of(this.context).push(
+                          MaterialPageRoute<void>(
+                            builder: (_) => GroupPlanScreen(
+                              repository: repository,
+                              code: code,
+                            ),
+                          ),
+                        );
+                      },
+                      child: const Text('تخصيص المجموعة'),
+                    ),
+                    if (DayData.items(card).any((i) => i['hidden'] == true))
+                      TextButton(
+                        onPressed: () => update(() => showHidden = !showHidden),
+                        child: Text(
+                          showHidden
+                              ? 'إخفاء العناصر المخفية'
+                              : 'إظهار المخفي — ${card['hiddenOfficialIncomplete'] ?? 0} رسمي متبقٍ ضمن النقاط',
+                        ),
+                      ),
+                    for (final item in DayData.items(
+                      card,
+                    ).where((i) => showHidden || i['hidden'] != true))
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(12),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                item['textAr'] as String,
+                                textDirection: TextDirection.rtl,
+                                style: Theme.of(context).textTheme.titleMedium,
+                              ),
+                              Text(
+                                item['sourceType'] == 'PERSONAL'
+                                    ? 'شخصي — للمتابعة فقط وبدون نقاط'
+                                    : item['isScoreEligible'] == true
+                                    ? 'رسمي — ضمن نقاط الكارت'
+                                    : 'رسمي — للمتابعة فقط',
+                              ),
+                              if (item['sourceType'] == 'OFFICIAL') ...[
+                                Text('المصدر: ${item['sourceName']}'),
+                                SelectableText(item['sourceUrl'] as String),
+                                Text(item['licenseNotes'] as String),
+                              ],
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  IconButton(
+                                    key: Key('minus-${item['code']}'),
+                                    tooltip: 'تقليل العدد',
+                                    onPressed: blocked
+                                        ? null
+                                        : () => _edit(
+                                            'count',
+                                            item['itemKey'] as String,
+                                            delta: -1,
+                                          ),
+                                    icon: const Icon(Icons.remove),
+                                  ),
+                                  TextButton(
+                                    key: Key('count-${item['code']}'),
+                                    onPressed:
+                                        blocked || item['targetCount'] != 1
+                                        ? null
+                                        : () => _edit(
+                                            'count',
+                                            item['itemKey'] as String,
+                                          ),
+                                    child: Text(
+                                      '${item['completedCount']}/${item['targetCount']}',
+                                    ),
+                                  ),
+                                  IconButton(
+                                    key: Key('plus-${item['code']}'),
+                                    tooltip: 'زيادة العدد',
+                                    onPressed: blocked
+                                        ? null
+                                        : () => _edit(
+                                            'count',
+                                            item['itemKey'] as String,
+                                            delta: 1,
+                                          ),
+                                    icon: const Icon(Icons.add),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );

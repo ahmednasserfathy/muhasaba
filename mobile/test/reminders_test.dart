@@ -284,9 +284,10 @@ void main() {
       await disk.customStatement(
         "INSERT INTO sync_outbox(owner,date,route,payload) VALUES('owner','2026-11-19','test','{}')",
       );
-      // Recreate exactly the v2 schema: only reminder tables/version differ.
+      // Recreate the v2 schema before reminder and personal-plan tables.
       await disk.customStatement('DROP TABLE reminder_preferences');
       await disk.customStatement('DROP TABLE reminder_slots');
+      await disk.customStatement('DROP TABLE local_group_plans');
       await disk.customStatement('PRAGMA user_version = 2');
       await disk.close();
       disk = JournalDatabase(NativeDatabase(file));

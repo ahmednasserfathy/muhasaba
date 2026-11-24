@@ -603,7 +603,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/PlanWrite"
+                "$ref": "#/components/schemas/app__modules__fasting__schemas__PlanWrite"
               }
             }
           }
@@ -748,6 +748,729 @@
         }
       }
     },
+    "/api/v1/me/custom-items": {
+      "get": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Items",
+        "operationId": "items_api_v1_me_custom_items_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Create Item",
+        "operationId": "create_item_api_v1_me_custom_items_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/me/groups/{code}/plan": {
+      "get": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Plan",
+        "operationId": "plan_api_v1_me_groups__code__plan_get",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          },
+          {
+            "name": "date",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Save",
+        "operationId": "save_api_v1_me_groups__code__plan_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__personal__schemas__PlanWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/groups/{code}/restore-defaults": {
+      "post": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Restore",
+        "operationId": "restore_api_v1_me_groups__code__restore_defaults_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/app__modules__personal__schemas__PlanWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/custom-items/{key}": {
+      "patch": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Patch Item",
+        "operationId": "patch_item_api_v1_me_custom_items__key__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "personal"
+        ],
+        "summary": "Archive Item",
+        "operationId": "archive_item_api_v1_me_custom_items__key__delete",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemContext"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PlanView"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/library-items": {
+      "get": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "List Library",
+        "operationId": "list_library_api_v1_admin_library_items_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Create Library",
+        "operationId": "create_library_api_v1_admin_library_items_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/library-items/{key}": {
+      "patch": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Edit Library",
+        "operationId": "edit_library_api_v1_admin_library_items__key__patch",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LibraryWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/library-items/{key}/archive": {
+      "post": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Archive Library",
+        "operationId": "archive_library_api_v1_admin_library_items__key__archive_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Edit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/catalog-releases": {
+      "get": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Releases",
+        "operationId": "releases_api_v1_admin_catalog_releases_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Create Release",
+        "operationId": "create_release_api_v1_admin_catalog_releases_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReleaseWrite"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/admin/catalog-releases/{key}/groups/{code}/items": {
+      "put": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Bind Items",
+        "operationId": "bind_items_api_v1_admin_catalog_releases__key__groups__code__items_put",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key"
+            }
+          },
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Code"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BindingsWrite"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/admin/catalog-releases/{key}/publish": {
+      "post": {
+        "tags": [
+          "editorial"
+        ],
+        "summary": "Publish Release",
+        "operationId": "publish_release_api_v1_admin_catalog_releases__key__publish_post",
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Edit"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -830,6 +1553,72 @@
         ],
         "title": "ActivityResponse"
       },
+      "Binding": {
+        "properties": {
+          "libraryEntryId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Libraryentryid"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 90,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Code"
+          },
+          "targetCount": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Targetcount"
+          },
+          "isScoreEligible": {
+            "type": "boolean",
+            "title": "Isscoreeligible",
+            "default": true
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "libraryEntryId",
+          "code",
+          "targetCount"
+        ],
+        "title": "Binding"
+      },
+      "BindingsWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/Binding"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "title": "Items"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "items"
+        ],
+        "title": "BindingsWrite"
+      },
       "CalendarView": {
         "properties": {
           "today": {
@@ -861,6 +1650,26 @@
       },
       "CardView": {
         "properties": {
+          "planVersion": {
+            "type": "integer",
+            "title": "Planversion",
+            "default": 0
+          },
+          "hiddenOfficialIncomplete": {
+            "type": "integer",
+            "title": "Hiddenofficialincomplete",
+            "default": 0
+          },
+          "personalCompleted": {
+            "type": "integer",
+            "title": "Personalcompleted",
+            "default": 0
+          },
+          "personalTotal": {
+            "type": "integer",
+            "title": "Personaltotal",
+            "default": 0
+          },
           "code": {
             "type": "string",
             "title": "Code"
@@ -1027,6 +1836,13 @@
             "minLength": 1,
             "title": "Catalogrelease"
           },
+          "expectedPlanVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedplanversion",
+            "default": 0
+          },
           "expectedVersion": {
             "type": "integer",
             "maximum": 2147483646.0,
@@ -1133,6 +1949,28 @@
           "summary"
         ],
         "title": "DayView"
+      },
+      "Edit": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion"
+        ],
+        "title": "Edit"
       },
       "FastingView": {
         "properties": {
@@ -1265,6 +2103,48 @@
         "type": "object",
         "title": "HealthResponse"
       },
+      "ItemContext": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Catalogrelease"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "title": "Effectivefrom"
+          },
+          "activityCode": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Activitycode"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "catalogRelease",
+          "effectiveFrom",
+          "activityCode"
+        ],
+        "title": "ItemContext"
+      },
       "ItemResponse": {
         "properties": {
           "code": {
@@ -1353,9 +2233,22 @@
           },
           "sourceType": {
             "type": "string",
-            "const": "OFFICIAL",
+            "enum": [
+              "OFFICIAL",
+              "PERSONAL"
+            ],
             "title": "Sourcetype",
             "default": "OFFICIAL"
+          },
+          "hidden": {
+            "type": "boolean",
+            "title": "Hidden",
+            "default": false
+          },
+          "sortOrder": {
+            "type": "integer",
+            "title": "Sortorder",
+            "default": 0
           },
           "isScoreEligible": {
             "type": "boolean",
@@ -1363,15 +2256,18 @@
           },
           "sourceName": {
             "type": "string",
-            "title": "Sourcename"
+            "title": "Sourcename",
+            "default": ""
           },
           "sourceUrl": {
             "type": "string",
-            "title": "Sourceurl"
+            "title": "Sourceurl",
+            "default": ""
           },
           "licenseNotes": {
             "type": "string",
-            "title": "Licensenotes"
+            "title": "Licensenotes",
+            "default": ""
           }
         },
         "additionalProperties": false,
@@ -1383,14 +2279,11 @@
           "targetCount",
           "completedCount",
           "rowVersion",
-          "isScoreEligible",
-          "sourceName",
-          "sourceUrl",
-          "licenseNotes"
+          "isScoreEligible"
         ],
         "title": "ItemView"
       },
-      "PlanWrite": {
+      "ItemWrite": {
         "properties": {
           "clientMutationId": {
             "type": "string",
@@ -1403,30 +2296,25 @@
             "minimum": 0.0,
             "title": "Expectedversion"
           },
-          "mode": {
+          "catalogRelease": {
             "type": "string",
-            "enum": [
-              "DEFAULT",
-              "ADD",
-              "SKIP"
-            ],
-            "title": "Mode"
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Catalogrelease"
           },
-          "fastType": {
-            "anyOf": [
-              {
-                "type": "string",
-                "enum": [
-                  "VOLUNTARY",
-                  "MAKEUP",
-                  "OTHER"
-                ]
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Fasttype"
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "title": "Effectivefrom"
+          },
+          "activityCode": {
+            "type": "string",
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Activitycode"
+          },
+          "item": {
+            "$ref": "#/components/schemas/PersonalItem"
           }
         },
         "additionalProperties": false,
@@ -1434,9 +2322,212 @@
         "required": [
           "clientMutationId",
           "expectedVersion",
-          "mode"
+          "catalogRelease",
+          "effectiveFrom",
+          "activityCode",
+          "item"
         ],
-        "title": "PlanWrite"
+        "title": "ItemWrite"
+      },
+      "LibraryWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 90,
+            "minLength": 1,
+            "pattern": "^[a-zA-Z0-9_-]+$",
+            "title": "Code"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DHIKR",
+              "DUA"
+            ],
+            "title": "Type"
+          },
+          "titleAr": {
+            "type": "string",
+            "maxLength": 500,
+            "title": "Titlear",
+            "default": ""
+          },
+          "textAr": {
+            "type": "string",
+            "maxLength": 20000,
+            "minLength": 1,
+            "title": "Textar"
+          },
+          "defaultTargetCount": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Defaulttargetcount"
+          },
+          "sourceName": {
+            "type": "string",
+            "maxLength": 500,
+            "minLength": 1,
+            "title": "Sourcename"
+          },
+          "sourceUrl": {
+            "type": "string",
+            "maxLength": 2083,
+            "minLength": 1,
+            "format": "uri",
+            "title": "Sourceurl"
+          },
+          "licenseNotes": {
+            "type": "string",
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Licensenotes"
+          },
+          "verified": {
+            "type": "boolean",
+            "title": "Verified",
+            "default": false
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "code",
+          "type",
+          "textAr",
+          "defaultTargetCount",
+          "sourceName",
+          "sourceUrl",
+          "licenseNotes"
+        ],
+        "title": "LibraryWrite"
+      },
+      "PersonalItem": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "DHIKR",
+              "DUA"
+            ],
+            "title": "Type",
+            "default": "DHIKR"
+          },
+          "textAr": {
+            "type": "string",
+            "maxLength": 10000,
+            "minLength": 1,
+            "title": "Textar"
+          },
+          "targetCount": {
+            "type": "integer",
+            "maximum": 1000.0,
+            "minimum": 1.0,
+            "title": "Targetcount"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "id",
+          "textAr",
+          "targetCount"
+        ],
+        "title": "PersonalItem"
+      },
+      "PlanView": {
+        "properties": {
+          "activityCode": {
+            "type": "string",
+            "title": "Activitycode"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "title": "Date"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "title": "Catalogrelease"
+          },
+          "rowVersion": {
+            "type": "integer",
+            "title": "Rowversion"
+          },
+          "effectiveFrom": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Effectivefrom"
+          },
+          "hiddenDefaultCodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Hiddendefaultcodes"
+          },
+          "officialOrder": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Officialorder"
+          },
+          "customItems": {
+            "items": {
+              "$ref": "#/components/schemas/PersonalItem"
+            },
+            "type": "array",
+            "title": "Customitems"
+          },
+          "officialItems": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "array",
+            "title": "Officialitems"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "activityCode",
+          "date",
+          "catalogRelease",
+          "rowVersion",
+          "effectiveFrom",
+          "hiddenDefaultCodes",
+          "officialOrder",
+          "customItems",
+          "officialItems"
+        ],
+        "title": "PlanView"
       },
       "RefreshRequest": {
         "properties": {
@@ -1499,6 +2590,47 @@
           "password"
         ],
         "title": "RegisterRequest"
+      },
+      "ReleaseWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "baseReleaseId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Basereleaseid"
+          },
+          "code": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Code"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "title": "Effectivefrom"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "baseReleaseId",
+          "code",
+          "effectiveFrom"
+        ],
+        "title": "ReleaseWrite"
       },
       "ReportDay": {
         "properties": {
@@ -1885,6 +3017,113 @@
           "type"
         ],
         "title": "ValidationError"
+      },
+      "app__modules__fasting__schemas__PlanWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "DEFAULT",
+              "ADD",
+              "SKIP"
+            ],
+            "title": "Mode"
+          },
+          "fastType": {
+            "anyOf": [
+              {
+                "type": "string",
+                "enum": [
+                  "VOLUNTARY",
+                  "MAKEUP",
+                  "OTHER"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fasttype"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "mode"
+        ],
+        "title": "PlanWrite"
+      },
+      "app__modules__personal__schemas__PlanWrite": {
+        "properties": {
+          "clientMutationId": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Clientmutationid"
+          },
+          "expectedVersion": {
+            "type": "integer",
+            "maximum": 2147483646.0,
+            "minimum": 0.0,
+            "title": "Expectedversion"
+          },
+          "catalogRelease": {
+            "type": "string",
+            "maxLength": 50,
+            "minLength": 1,
+            "title": "Catalogrelease"
+          },
+          "effectiveFrom": {
+            "type": "string",
+            "format": "date",
+            "title": "Effectivefrom"
+          },
+          "hiddenDefaultCodes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "title": "Hiddendefaultcodes"
+          },
+          "officialOrder": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 1000,
+            "title": "Officialorder"
+          },
+          "customItems": {
+            "items": {
+              "$ref": "#/components/schemas/PersonalItem"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "title": "Customitems"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "required": [
+          "clientMutationId",
+          "expectedVersion",
+          "catalogRelease",
+          "effectiveFrom"
+        ],
+        "title": "PlanWrite"
       }
     },
     "securitySchemes": {

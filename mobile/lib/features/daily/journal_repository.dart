@@ -108,6 +108,12 @@ class JournalRepository {
         if (date.compareTo(today) > 0 || date.compareTo(day.start) < 0) {
           throw const AuthFailure('التاريخ خارج فترة المتابعة.');
         }
+        if ((await db.pending(
+          owner,
+          date,
+        )).any((r) => r.read<String>('route').startsWith('me/groups/'))) {
+          throw const AuthFailure('زامن تخصيص المجموعة قبل تسجيل إنجاز اليوم.');
+        }
         if (await blocked(date)) {
           throw const AuthFailure('راجع تعارض هذا اليوم أولًا.');
         }
@@ -155,11 +161,16 @@ class JournalRepository {
             'completedCount': count,
             'expectedVersion': item['rowVersion'],
           });
+          if (item['sourceType'] == 'PERSONAL') {
+            payload['expectedPlanVersion'] = card['planVersion'];
+          }
           item['completedCount'] = count;
           item['rowVersion'] = (item['rowVersion'] as int) + 1;
           route = 'adhkar/${Uri.encodeComponent(key)}';
         } else {
-          final items = DayData.items(day.card(key));
+          final items = DayData.items(
+            day.card(key),
+          ).where((i) => i['sourceType'] == 'OFFICIAL').toList();
           payload.addAll({
             'action': action,
             'expectedVersions': {
@@ -220,7 +231,17 @@ class JournalRepository {
                 'DELETE FROM sync_outbox WHERE owner=? AND sequence=?',
                 [owner, sequence],
               );
-              if ((await db.pending(owner, row.read<String>('date'))).isEmpty) {
+              final route = row.read<String>('route');
+              if (route.startsWith('me/groups/')) {
+                if (!(await db.pending(
+                  owner,
+                )).any((r) => r.read<String>('route') == route)) {
+                  await db.saveGroup(owner, response);
+                }
+              } else if ((await db.pending(
+                owner,
+                row.read<String>('date'),
+              )).isEmpty) {
                 if (row.read<String>('route').endsWith('/fasting-plan')) {
                   await db.saveFasting(owner, response);
                 } else {
@@ -260,6 +281,141 @@ class JournalRepository {
     }
   }
 
+  String groupRoute(String code) =>
+      'me/groups/${Uri.encodeComponent(code)}/plan';
+  String get tomorrow => DateTime.parse(
+    '${today}T00:00:00Z',
+  ).add(const Duration(days: 1)).toIso8601String().split('T').first;
+  Future<Map<String, dynamic>?> readGroup(String code, String date) =>
+      db.readGroup(owner, code, date);
+  Future<bool> groupPending(String code) async => (await db.pending(
+    owner,
+  )).any((r) => r.read<String>('route') == groupRoute(code));
+  Future<String?> pendingGroupDate(String code) async {
+    final rows = (await db.pending(
+      owner,
+    )).where((r) => r.read<String>('route') == groupRoute(code));
+    return rows.isEmpty ? null : rows.first.read<String>('date');
+  }
+
+  Future<Map<String, dynamic>> serverGroup(String code, String date) =>
+      auth.authorized('GET', '${groupRoute(code)}?date=$date', account.id);
+
+  Future<void> loadGroup(String code, String date) async {
+    await sync();
+    final revision = _revision;
+    try {
+      final plan = await serverGroup(code, date);
+      if (_disposed) return;
+      await _local(
+        () => db.transaction(() async {
+          if (revision == _revision && !await groupPending(code)) {
+            await db.saveGroup(owner, plan);
+          }
+        }),
+      );
+    } catch (error) {
+      message = _error(error);
+    }
+    _notify();
+  }
+
+  Future<void> saveGroup(Map<String, dynamic> plan) async {
+    final code = plan['activityCode'] as String;
+    final date = plan['date'] as String;
+    await _local(
+      () => db.transaction(() async {
+        if (![today, tomorrow].contains(date)) {
+          throw const AuthFailure('اختر اليوم أو الغد.');
+        }
+        if (await groupPending(code)) {
+          throw const AuthFailure(
+            'زامن التخصيص المحفوظ أو راجع تعارضه قبل تعديله مجددًا.',
+          );
+        }
+        final cached = await readGroup(code, date);
+        if (cached == null || cached['rowVersion'] != plan['rowVersion']) {
+          throw const AuthFailure('حمّل التخصيص الحالي قبل الحفظ.');
+        }
+        DayData? day;
+        if (date == today) {
+          day = await read(date);
+          if (day == null || (await db.pending(owner, date)).isNotEmpty) {
+            throw const AuthFailure('حمّل اليوم وزامن تعديلاته أولًا.');
+          }
+          final card = day.card(code);
+          if (card['rowVersion'] != 0 ||
+              DayData.items(card).any((i) => i['rowVersion'] != 0)) {
+            throw const AuthFailure(
+              'بدأ تسجيل هذه المجموعة؛ طبّق التخصيص من الغد.',
+            );
+          }
+        }
+        final payload = {
+          'clientMutationId': const Uuid().v4(),
+          'expectedVersion': plan['rowVersion'],
+          'catalogRelease': plan['catalogRelease'],
+          'effectiveFrom': date,
+          'hiddenDefaultCodes': plan['hiddenDefaultCodes'],
+          'officialOrder': plan['officialOrder'],
+          'customItems': plan['customItems'],
+        };
+        final projected = {
+          ...plan,
+          'rowVersion': (plan['rowVersion'] as int) + 1,
+          'effectiveFrom': date,
+        };
+        _revision++;
+        await db.saveGroup(owner, projected);
+        if (day != null) {
+          day.applyGroup(projected);
+          await db.saveDay(owner, day);
+        }
+        await db.customStatement(
+          'INSERT INTO sync_outbox(owner,date,route,payload) VALUES(?,?,?,?)',
+          [owner, date, groupRoute(code), jsonEncode(payload)],
+        );
+      }),
+    );
+    _notify();
+    unawaited(sync());
+  }
+
+  // Explicitly discard only this group's plan after comparing both versions.
+  Future<void> useServerGroup(Map<String, dynamic> plan) async {
+    if (_syncing) throw const AuthFailure('انتظر انتهاء المزامنة.');
+    final code = plan['activityCode'] as String;
+    final date = plan['date'] as String;
+    final remoteDay = date.compareTo(today) <= 0 ? await serverDay(date) : null;
+    await _local(
+      () => db.transaction(() async {
+        final queued = (await db.pending(
+          owner,
+        )).where((r) => r.read<String>('route') == groupRoute(code)).toList();
+        if (queued.any((r) => r.read<String>('date') != date)) {
+          throw const AuthFailure('اختر تاريخ التخصيص المعلّق لمراجعة تعارضه.');
+        }
+        if (remoteDay != null &&
+            (await db.pending(
+              owner,
+              date,
+            )).any((r) => r.read<String>('route') != groupRoute(code))) {
+          throw const AuthFailure('زامن تعديلات اليوم أولًا.');
+        }
+        _revision++;
+        await db.customStatement(
+          'DELETE FROM sync_outbox WHERE owner=? AND route=?',
+          [owner, groupRoute(code)],
+        );
+        await db.saveGroup(owner, plan);
+        if (remoteDay != null) await db.saveDay(owner, remoteDay);
+      }),
+    );
+    message = null;
+    _notify();
+    unawaited(sync());
+  }
+
   Future<DayData> serverDay(String date) async =>
       DayData(await auth.authorized('GET', 'days/$date', account.id));
 
@@ -269,6 +425,14 @@ class JournalRepository {
     if (_syncing) throw const AuthFailure('انتظر انتهاء المزامنة.');
     await _local(
       () => db.transaction(() async {
+        if ((await db.pending(
+          owner,
+          date,
+        )).any((r) => r.read<String>('route').startsWith('me/groups/'))) {
+          throw const AuthFailure(
+            'راجع تعارض تخصيص المجموعة أولًا من شاشة التخصيص.',
+          );
+        }
         _revision++;
         await db.customStatement(
           'DELETE FROM sync_outbox WHERE owner=? AND date=?',
