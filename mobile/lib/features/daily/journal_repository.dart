@@ -386,9 +386,15 @@ class JournalRepository {
     if (_syncing) throw const AuthFailure('انتظر انتهاء المزامنة.');
     final code = plan['activityCode'] as String;
     final date = plan['date'] as String;
+    final revision = _revision;
     final remoteDay = date.compareTo(today) <= 0 ? await serverDay(date) : null;
     await _local(
       () => db.transaction(() async {
+        if (revision != _revision) {
+          throw const AuthFailure(
+            'تغيّر السجل أثناء المراجعة. أعد تحميل نسخة الخادم.',
+          );
+        }
         final queued = (await db.pending(
           owner,
         )).where((r) => r.read<String>('route') == groupRoute(code)).toList();

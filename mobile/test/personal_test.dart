@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
@@ -255,6 +256,37 @@ void main() {
       final rows = await db.pending(repo.owner);
       expect(rows.length, 1);
       expect(rows.single.read<String>('route'), contains('/activities/dhuhr'));
+      expect(
+        (await repo.read(repo.today))!.card('dhuhr')['state'],
+        'COMPLETED',
+      );
+    },
+  );
+
+  test(
+    'plan conflict fetch cannot overwrite a newer acknowledged journal edit',
+    () async {
+      final started = Completer<void>();
+      final release = Completer<void>();
+      final old = sampleDay(repo.today);
+      server.day = sampleDay(repo.today);
+      server.offline = false;
+      auth.dio.httpClientAdapter = FakeAdapter((request) async {
+        if (request.method == 'GET') {
+          started.complete();
+          await release.future;
+          return jsonResponse(old.json);
+        }
+        return server.handle(request);
+      });
+      final adopting = repo.useServerGroup(samplePlan(repo.today));
+      final rejected = expectLater(adopting, throwsA(isA<AuthFailure>()));
+      await started.future;
+      await repo.edit(repo.today, 'state', 'dhuhr');
+      await idle(repo);
+      expect(await repo.pendingCount(), 0);
+      release.complete();
+      await rejected;
       expect(
         (await repo.read(repo.today))!.card('dhuhr')['state'],
         'COMPLETED',
