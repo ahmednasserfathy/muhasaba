@@ -1,5 +1,10 @@
 # PR-07: release readiness, recovery and private operations
 
+Update, 25 November 2026: the owner supplied an AWS host and authorized replacing
+the temporary domain's existing site. See `infra/STAGING.md` for the verified
+deployment checkpoint and remaining DNS/ingress/TLS work. The original preparation
+scope and deferred-release gates below remain historical context.
+
 PR-06b is accepted and merged. This is release preparation, not a production
 launch. The user explicitly deferred AWS; Android work comes after backend/mobile
 checks. No deployed HTTPS service, production content or persistent signing key

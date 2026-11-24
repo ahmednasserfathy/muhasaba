@@ -1,0 +1,20 @@
+# Use with compose.yml. Nginx on the host is the only public entry point.
+services:
+  db:
+    ports: !reset []
+    restart: unless-stopped
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
+  api:
+    restart: unless-stopped
+    environment:
+      # Set to the inspected Docker network gateway used by host Nginx.
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-127.0.0.1}
+    logging:
+      driver: local
+      options:
+        max-size: "10m"
+        max-file: "3"
