@@ -263,6 +263,35 @@ void main() {
   );
 
   test(
+    'expired queued plan remains resolvable without retaining its projected day',
+    () async {
+      const oldDate = '2026-11-19';
+      final projected = sampleDay(oldDate);
+      projected.applyGroup({
+        ...samplePlan(oldDate),
+        'rowVersion': 1,
+        'customItems': [personal],
+      });
+      await db.saveDay(repo.owner, projected);
+      await db.saveGroup(repo.owner, {
+        ...samplePlan(oldDate),
+        'rowVersion': 1,
+        'customItems': [personal],
+      });
+      await db.customStatement(
+        'INSERT INTO sync_outbox(owner,date,route,payload,blocked) VALUES(?,?,?,?,1)',
+        [repo.owner, oldDate, repo.groupRoute('set'), '{}'],
+      );
+      expect(await repo.pendingGroupDate('set'), oldDate);
+      server.offline = false;
+      await repo.useServerGroup(samplePlan(oldDate));
+      await idle(repo);
+      expect(await repo.pendingCount(), 0);
+      expect((await repo.read(oldDate))!.card('set')['personalTotal'], 0);
+    },
+  );
+
+  test(
     'v3 migration and restart preserve plan cache and pending mutation',
     () async {
       final temp = await Directory.systemTemp.createTemp('muhasaba-personal-');

@@ -101,7 +101,9 @@ def test_private_owner_and_admin_cannot_override_ownership(client, session, jour
     assert client.put(PLAN, json=payload).status_code == 200
     other = register(client, "other@example.com", trackingStartDate="2026-11-01")
     client.headers.update(header(other))
-    user = session.scalar(select(User).where(User.email == "other@example.com"))
+    user = session.scalar(
+        select(User).where(User.email_normalized == "other@example.com")
+    )
     user.role = "ADMIN"
     session.commit()
     assert client.get("/api/v1/me/custom-items").json() == []
@@ -312,3 +314,31 @@ def test_five_official_three_complete_hidden_two_personal_still_one_point_two(
     group = card(response, "test_set")
     assert group["earnedPoints"] == 1.2 and group["possiblePoints"] == 2
     assert group["hiddenOfficialIncomplete"] == 2 and group["personalCompleted"] == 1
+
+
+def test_new_catalog_drops_obsolete_display_codes_but_preserves_private_plan(
+    client, session, journal
+):
+    from test_catalog import draft, publish
+
+    payload = body(journal[0])
+    assert client.put(PLAN, json=payload).status_code == 200
+    newer, _, _, _ = draft(session, DAY + timedelta(days=1))
+    publish(session, newer)
+    session.commit()
+    result = client.get(f"{PLAN}?date={DAY + timedelta(days=1)}").json()
+    assert result["hiddenDefaultCodes"] == []
+    assert result["officialOrder"] == ["test_item"]
+    assert result["customItems"] == payload["customItems"]
+    context = dict(
+        clientMutationId=str(uuid4()),
+        expectedVersion=1,
+        catalogRelease=newer.code,
+        effectiveFrom=str(DAY + timedelta(days=1)),
+        activityCode="test_set",
+    )
+    result = client.patch(
+        f"/api/v1/me/custom-items/{payload['customItems'][0]['id']}",
+        json={**context, "item": {**payload["customItems"][0], "targetCount": 3}},
+    )
+    assert result.status_code == 200

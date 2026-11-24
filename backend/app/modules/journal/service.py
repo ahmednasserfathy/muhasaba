@@ -238,7 +238,11 @@ def _write(db, user, day_date, kind, key, data):
     db.scalar(select(User).where(User.id == user.id).with_for_update())
     body = data.model_dump(mode="json")
     # Keep official counter receipt hashes compatible with pre-personal clients.
-    if kind == "count" and key.startswith("official:"):
+    if (
+        kind == "count"
+        and key.startswith("official:")
+        and data.expected_plan_version == 0
+    ):
         body.pop("expected_plan_version", None)
     payload = json.dumps(
         [str(day_date), kind, key, body],

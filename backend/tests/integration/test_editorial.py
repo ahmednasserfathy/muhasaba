@@ -33,7 +33,9 @@ def library(**overrides):
 @pytest.fixture
 def admin(client, session, journal, monkeypatch):
     monkeypatch.setattr(editorial, "today", lambda user: DAY)
-    user = session.scalar(select(User).where(User.email == "person@example.com"))
+    user = session.scalar(
+        select(User).where(User.email_normalized == "person@example.com")
+    )
     user.role = "ADMIN"
     session.commit()
     return journal[0]
