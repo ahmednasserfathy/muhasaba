@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:muhasaba/features/auth/auth_client.dart';
 import 'package:muhasaba/features/auth/auth_controller.dart';
 import 'package:muhasaba/features/daily/daily_screen.dart';
+import 'package:muhasaba/features/daily/day_data.dart';
 import 'package:muhasaba/features/daily/journal_database.dart';
 import 'package:muhasaba/features/daily/journal_repository.dart';
 
@@ -33,9 +34,10 @@ void main() {
         const SessionTokens('access', 'refresh', baseUrl, journalAccount),
       );
       final repo = JournalRepository(db, auth, journalAccount);
-      await tester.runAsync(
-        () => db.saveDay(repo.owner, sampleDay(repo.today)),
-      );
+      final initial = sampleDay(repo.today);
+      DayData.items(initial.card('set'))[1]['hidden'] = true;
+      initial.recalculate();
+      await tester.runAsync(() => db.saveDay(repo.owner, initial));
       tester.view.physicalSize = const Size(800, 1200);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
@@ -74,6 +76,10 @@ void main() {
       await tester.tap(find.byKey(const Key('minus-one')));
       await settleJournal(tester);
       expect(find.text('0.0 / 2 نقطة — 0/2 مكتمل'), findsOneWidget);
+      expect(find.byKey(const Key('plus-two')), findsNothing);
+      await tester.tap(find.text('إظهار المخفي — 1 رسمي متبقٍ ضمن النقاط'));
+      await settleJournal(tester);
+      expect(find.byKey(const Key('plus-two')), findsOneWidget);
       expect(tester.takeException(), isNull);
       await tester.tap(find.byTooltip('إغلاق'));
       await settleJournal(tester);
