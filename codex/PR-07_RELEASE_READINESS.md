@@ -2,7 +2,8 @@
 
 Update, 25 November 2026: the owner supplied an AWS host and authorized replacing
 the temporary domain's existing site. See `infra/STAGING.md` for the verified
-deployment checkpoint and remaining DNS/ingress/TLS work. The original preparation
+deployment checkpoint: public HTTPS and certificate renewal checks now pass with
+a dedicated web security group. The original preparation
 scope and deferred-release gates below remain historical context.
 
 PR-06b is accepted and merged. This is release preparation, not a production
@@ -110,7 +111,7 @@ up independently; never use or retain the disposable CI certificate for distribu
 | Private operations | Allowlisted logging/readiness tests, no payload capture |
 | Security review | Bounded static auth/ownership/editorial/cache/operations review; not an independent penetration test or dependency audit |
 | Android build | CI ephemeral release signing/verification; persistent internal release + device UAT pending |
-| Staging | AWS/TLS/edge rate limits/secrets/backup retention deferred by user |
+| Staging | AWS/TLS and renewal checks passed; dedicated web ingress, edge limits and server secrets configured; external backup retention and monitoring remain open |
 | Content | Official Arabic source/reuse approval and regional Ramadan confirmation remain operator gates |
 | Privacy/support | Publish actual policy/contact and deletion/retention workflow before broader release; no policy or SLA invented here |
 
