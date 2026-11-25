@@ -27,7 +27,21 @@ TCP 80 and 443 from `0.0.0.0/0`; the existing group remains attached for SSH.
 - External checks passed with normal TLS verification: `/`, `/health`, `/ready`
   return 200, unauthenticated `/api/v1/me` returns 401, `/docs` returns 404, and
   each HTTPS response contains `Cache-Control: no-store`.
-- No religious catalog was approved or published. No demo fixture was installed.
+- The first sourced catalog `staging-adhkar-v1` is effective from 25 November
+  2026. It preserves the 34 reference activities and their weights. Its 23
+  distinct entries cover 17 groups through 48 bindings. The public catalog API
+  returned the release, sources and expected repeat targets. This is a starter
+  selection of classical Arabic formulas, with references in
+  `backend/scripts/staging_adhkar.csv`. For a practice with no fixed repeat count,
+  one in the app records a done action. The entry for entering the house is an
+  example of remembrance, as Muslim 2018a does not specify a formula.
+  The clothing group currently covers putting on clothes.
+- The AWS restore drill on 25 November 2026 restored a staging dump into a new
+  disposable database. Alembic revision `0006`, all 18 public tables by count,
+  and counts for accounts, activities, adhkar and published releases matched.
+  The staging database held 34 draft activities and no accounts, adhkar or
+  published releases. The drill removed its archive and disposable database.
+  `/ready` stayed healthy before and after the drill.
 - No external backup storage, retention schedule or production release is implied.
 
 ## Operating the stack

@@ -1,0 +1,24 @@
+groups,code,type,title_ar,text_ar,target_count,reference
+fajr_awake,wake_praise,DUA,عند الاستيقاظ,الحمد لله الذي أحيانا بعد ما أماتنا وإليه النشور,1,bukhari:6324
+after_prayer,prayer_forgiveness,DHIKR,الاستغفار,أستغفر الله,3,muslim:591
+after_prayer,prayer_peace,DUA,بعد السلام,اللهم أنت السلام ومنك السلام تباركت ذا الجلال والإكرام,1,muslim:591
+after_prayer,prayer_tasbih,DHIKR,التسبيح,سبحان الله,33,muslim:597a
+after_prayer,prayer_tahmid,DHIKR,التحميد,الحمد لله,33,muslim:597a
+after_prayer,prayer_takbir,DHIKR,التكبير,الله أكبر,33,muslim:597a
+after_prayer,prayer_tahlil,DHIKR,تمام المائة,لا إله إلا الله وحده لا شريك له له الملك وله الحمد وهو على كل شيء قدير,1,muslim:597a
+fajr_morning_dhikr,morning_dua,DUA,دعاء الصباح,اللهم بك أصبحنا وبك أمسينا وبك نحيا وبك نموت وإليك النشور,1,abudawud:5068
+asr_evening_dhikr,evening_dua,DUA,دعاء المساء,اللهم بك أمسينا وبك نحيا وبك نموت وإليك النشور,1,abudawud:5068
+fajr_morning_dhikr asr_evening_dhikr,morning_evening_tasbih,DHIKR,التسبيح والتحميد,سبحان الله وبحمده,100,muslim:2692
+dhikr_restroom,restroom_enter,DUA,عند دخول الخلاء,اللهم إني أعوذ بك من الخبث والخبائث,1,bukhari:142
+dhikr_restroom,restroom_leave,DUA,عند الخروج من الخلاء,غفرانك,1,abudawud:30
+dhikr_clothes,clothes_praise,DUA,عند لبس الثوب,الحمد لله الذي كساني هذا الثوب ورزقنيه من غير حول مني ولا قوة,1,abudawud:4023
+dhikr_wudu,wudu_testimony,DHIKR,بعد الوضوء,أشهد أن لا إله إلا الله وحده لا شريك له وأشهد أن محمدا عبده ورسوله,1,muslim:234b
+dhikr_home,home_enter,DHIKR,ذكر الله عند دخول البيت,بسم الله,1,muslim:2018a
+dhikr_home,home_leave,DUA,عند الخروج من البيت,بسم الله توكلت على الله لا حول ولا قوة إلا بالله,1,abudawud:5095
+dhikr_mosque,mosque_enter,DUA,عند دخول المسجد,اللهم افتح لي أبواب رحمتك,1,muslim:713a
+dhikr_mosque,mosque_leave,DUA,عند الخروج من المسجد,اللهم إني أسألك من فضلك,1,muslim:713a
+dhikr_walk_to_mosque,walk_light,DUA,عند الخروج إلى الصلاة,اللهم اجعل في قلبي نورا وفي لساني نورا واجعل في سمعي نورا واجعل في بصري نورا واجعل من خلفي نورا ومن أمامي نورا واجعل من فوقي نورا ومن تحتي نورا,1,muslim:763l
+dhikr_food_drink,food_start,DHIKR,قبل الطعام,بسم الله,1,bukhari:5376
+dhikr_food_drink,food_praise,DHIKR,بعد الطعام,الحمد لله كثيرا طيبا مباركا فيه غير مكفي ولا مودع ولا مستغنى عنه ربنا,1,bukhari:5458
+dhikr_riding,riding_tasbih,DHIKR,ذكر الركوب,سبحان الذي سخر لنا هذا وما كنا له مقرنين وإنا إلى ربنا لمنقلبون,1,muslim:1342
+dhikr_before_sleep,sleep_dua,DUA,عند النوم,باسمك اللهم أموت وأحيا,1,bukhari:6324
