@@ -1489,6 +1489,28 @@
           }
         }
       }
+    },
+    "/ready": {
+      "get": {
+        "summary": "Ready",
+        "description": "Database connectivity only; migration and content checks are release gates.",
+        "operationId": "ready_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Database unavailable"
+          }
+        }
+      }
     }
   },
   "components": {

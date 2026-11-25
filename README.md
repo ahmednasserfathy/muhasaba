@@ -2,7 +2,8 @@
 
 Android-first Arabic RTL Flutter application with a Python FastAPI backend and
 PostgreSQL. PR-00 provides the foundation; PR-01 adds the catalog and scoring.
-**PR-06b adds official library APIs and private group customization.**
+**PR-07 prepares recovery checks, private request telemetry and Android release builds.**
+See [`PR-07 readiness and remaining gates`](codex/PR-07_RELEASE_READINESS.md).
 See [`PR-06b behavior, API and limits`](codex/PR-06b_LIBRARY_PERSONAL.md).
 See [`PR-06 behavior and limits`](codex/PR-06_REMINDERS.md).
 See [`PR-05 contracts and checks`](codex/PR-05_REPORTS_SYNC.md).
@@ -60,7 +61,7 @@ From the repository root:
 cd backend
 uv python install 3.13
 uv sync --locked
-uv run --locked uvicorn app.main:app --reload
+uv run --locked uvicorn app.main:app --reload --no-access-log
 ```
 
 In another terminal:

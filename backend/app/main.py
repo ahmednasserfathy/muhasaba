@@ -1,11 +1,15 @@
 from typing import Literal
 
-from fastapi import FastAPI, Request
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.exception_handlers import request_validation_exception_handler
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
+from sqlalchemy import text
+from sqlalchemy.exc import SQLAlchemyError
 
+from app.core.db import get_session
+from app.core.observability import request_event
 from app.modules.auth.router import router as auth_router
 from app.modules.catalog.router import router as catalog_router
 from app.modules.editorial.router import router as editorial_router
@@ -41,6 +45,9 @@ async def private_account_responses(request: Request, call_next):
     return response
 
 
+app.middleware("http")(request_event)
+
+
 @app.exception_handler(RequestValidationError)
 async def validation_error(request: Request, exc: RequestValidationError):
     if request.url.path.startswith(("/api/v1/auth/", "/api/v1/me/", "/api/v1/admin/")):
@@ -60,4 +67,18 @@ class HealthResponse(BaseModel):
 @app.get("/health", response_model=HealthResponse)
 def health() -> HealthResponse:
     """Process liveness only; database readiness is checked separately."""
+    return HealthResponse()
+
+
+@app.get(
+    "/ready",
+    response_model=HealthResponse,
+    responses={503: {"description": "Database unavailable"}},
+)
+def ready(db=Depends(get_session)) -> HealthResponse:
+    """Database connectivity only; migration and content checks are release gates."""
+    try:
+        db.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        raise HTTPException(503, "Database unavailable") from None
     return HealthResponse()

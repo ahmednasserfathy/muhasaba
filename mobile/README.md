@@ -4,8 +4,9 @@ Android-first Flutter 3.38.9 / Dart 3.10.8, Arabic RTL. PR-02 implements
 register/login, session restoration, account summary and logout with Riverpod,
 Dio and flutter_secure_storage. PR-03 adds Arabic daily cards, adhkar detail counters and a Drift SQLite outbox.
 Open «المحاسبة اليوم» after login; each date must be loaded online once before
-offline editing. The official catalog is still draft; see the guarded synthetic
-demo and conflict/retry behavior in `../codex/PR-03_CORE_JOURNAL.md`.
+offline editing. The AWS staging catalog is available from 25 November 2026.
+For local databases, see the guarded synthetic demo and conflict/retry behavior
+in `../codex/PR-03_CORE_JOURNAL.md`.
 
 ```bash
 flutter pub get --enforce-lockfile
@@ -20,6 +21,12 @@ For a USB device, run `adb reverse tcp:8000 tcp:8000`, then:
 
 ```bash
 flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1/
+```
+
+To build an APK for local Android testing against staging:
+
+```bash
+flutter build apk --debug --dart-define=API_BASE_URL=https://ahmedeman.site/api/v1/
 ```
 
 Debug cleartext is allowed only for localhost, 127.0.0.1 and 10.0.2.2. Release
@@ -37,7 +44,8 @@ Android device/emulator and accepted SDK licenses are needed for device builds.
 On this Mac, Flutter tests are blocked by the native objective_c dependency's
 Xcode SDK lookup; Linux CI runs the client and widget tests. Secure storage tests
 mock the platform channel: real Android keystore behavior still needs device QA.
-The generated application ID and signing remain development placeholders.
+The application ID remains a development placeholder. Release builds now require
+explicit signing settings; they no longer silently use the debug key.
 
 PR-04 adds fasting ADD (optional type), SKIP and DEFAULT. The date picker includes
 the next 365 days for planning only. Load each plan online once before offline
@@ -57,3 +65,13 @@ refresh; this is not a background sync service. Preferences remain on this devic
 and Android permission is requested only through explicit settings interaction.
 Drift v3 preserves existing caches/outbox and adds preferences plus daily delivery
 reservations. See `../codex/PR-06_REMINDERS.md` for limits and final device QA.
+
+PR-07 release signing uses `ANDROID_KEYSTORE_PATH`, `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS`, and `ANDROID_KEY_PASSWORD` from the environment. Keep the key
+outside the repository; do not paste these values into chat or commit them.
+After a real staging HTTPS endpoint and an operator-owned persistent signing key
+are configured, run `flutter build apk --release --dart-define=API_BASE_URL=https://YOUR_HOST/api/v1/`.
+CI checks the release build with a disposable key and a deliberately unusable
+`staging.invalid` endpoint, verifies its signature, then deletes the APK/key.
+This is compilation verification, not a distributed staging build or device UAT.
+See `../codex/PR-07_RELEASE_READINESS.md` for pending release gates.
