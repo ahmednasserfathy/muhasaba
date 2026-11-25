@@ -4,8 +4,9 @@ Android-first Flutter 3.38.9 / Dart 3.10.8, Arabic RTL. PR-02 implements
 register/login, session restoration, account summary and logout with Riverpod,
 Dio and flutter_secure_storage. PR-03 adds Arabic daily cards, adhkar detail counters and a Drift SQLite outbox.
 Open «المحاسبة اليوم» after login; each date must be loaded online once before
-offline editing. The official catalog is still draft; see the guarded synthetic
-demo and conflict/retry behavior in `../codex/PR-03_CORE_JOURNAL.md`.
+offline editing. The AWS staging catalog is available from 25 November 2026.
+For local databases, see the guarded synthetic demo and conflict/retry behavior
+in `../codex/PR-03_CORE_JOURNAL.md`.
 
 ```bash
 flutter pub get --enforce-lockfile
@@ -20,6 +21,12 @@ For a USB device, run `adb reverse tcp:8000 tcp:8000`, then:
 
 ```bash
 flutter run --dart-define=API_BASE_URL=http://127.0.0.1:8000/api/v1/
+```
+
+To build an APK for local Android testing against staging:
+
+```bash
+flutter build apk --debug --dart-define=API_BASE_URL=https://ahmedeman.site/api/v1/
 ```
 
 Debug cleartext is allowed only for localhost, 127.0.0.1 and 10.0.2.2. Release
